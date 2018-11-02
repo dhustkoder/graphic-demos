@@ -226,8 +226,8 @@ int main(void)
 			std::default_random_engine gen;
 			std::uniform_int_distribution<int> distPosX(0, WIN_WIDTH);
 			std::uniform_int_distribution<int> distPosY(0, WIN_HEIGHT);
-			std::uniform_int_distribution<int> distVelX(-3, 3);
-			std::uniform_int_distribution<int> distVelY(-3, 3);
+			std::uniform_int_distribution<int> distVelX(-6, 6);
+			std::uniform_int_distribution<int> distVelY(-6, 6);
 			std::uniform_int_distribution<Uint8> distColor(0x0F, 0xFF);
 			std::uniform_int_distribution<int> distSize(1, 3);
 
