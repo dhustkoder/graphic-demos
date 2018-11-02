@@ -4,6 +4,7 @@
 #include <exception>
 #include <memory>
 #include <vector>
+#include <random>
 #include <SDL2/SDL.h>
 
 
@@ -90,6 +91,7 @@ public:
 		SDL_RenderPresent(m_renderer);
 	}
 
+
 protected:
 	SDL_Renderer* m_renderer = nullptr;
 };
@@ -169,7 +171,7 @@ public:
 		const Uint32 frameEnd = SDL_GetTicks();
 		const Uint32 frameTimeElapsed = (frameEnd - m_frameBegin);
 
-		if (frameTimeElapsed < 16)
+		if (m_vsync && frameTimeElapsed < 16)
 			SDL_Delay(16 - frameTimeElapsed);
 
 		++m_frameCnt;
@@ -192,12 +194,18 @@ public:
 		return static_cast<Renderer&>(*this);
 	}
 
+	void setVSync(bool active)
+	{
+		m_vsync = active;
+	}
+
 private:
 	SDL_Event m_event;
 	Uint32 m_frameBegin;
 	Uint32 m_secondsClock;
 	Uint32 m_frameCnt;
 	Uint32 m_fps = 0;
+	bool m_vsync = false;
 };
 
 
@@ -206,21 +214,39 @@ int main(void)
 {
 	try {
 		std::unique_ptr<Game> game = std::make_unique<Game>();
-		Rectangle rect({1, 1}, {800 / 2, 600 / 2}, {50, 50}, {0xFF, 0x00, 0x00});
+		std::vector<Rectangle> rects;
+
+		std::default_random_engine gen;
+		std::uniform_int_distribution<int> distPosX(0, 800);
+		std::uniform_int_distribution<int> distPosY(0, 600);
+		std::uniform_int_distribution<int> distVelX(-3, 3);
+		std::uniform_int_distribution<int> distVelY(-3, 3);
+
+		for (int i = 0; i < 55500; ++i) {
+			Rectangle rect({distVelX(gen), distVelY(gen)},
+			          {distPosX(gen), distPosY(gen)},
+			          {1, 1},
+			          {0xFF, 0x00, 0x00});
+			rects.push_back(rect);
+		}
+
 		while (game->HandleEvents()) {
 			game->BeginFrame({0xDE, 0xDE, 0xDE});
 			
-			const Vec2i pos = rect.GetPos();
-			Vec2i vel = rect.GetVel();
-			if ((pos.x >= 800 && vel.x > 0) || (pos.x <= 0 && vel.x < 0))
-				vel.x = -vel.x;
-			if ((pos.y >= 600 && vel.y > 0) || (pos.y <= 0 && vel.y < 0))
-				vel.y = -vel.y;
-			rect.SetVel(vel);
-			
-			rect.Update();
-			
-			rect.Draw(game->GetRenderer());
+			for (Rectangle& rect : rects) {
+				const Vec2i pos = rect.GetPos();
+				Vec2i vel = rect.GetVel();
+				if ((pos.x >= 800 && vel.x > 0) || (pos.x <= 0 && vel.x < 0))
+					vel.x = -vel.x;
+				if ((pos.y >= 600 && vel.y > 0) || (pos.y <= 0 && vel.y < 0))
+					vel.y = -vel.y;
+
+				rect.SetVel(vel);
+
+				rect.Update();
+
+				rect.Draw(game->GetRenderer());
+			}
 			
 			
 			game->EndFrame();
