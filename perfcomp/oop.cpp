@@ -271,7 +271,7 @@ int main(void)
 		}
 
 	} catch(std::exception& except) {
-		std::cout << "Fatal Exception: " << except.what();
+		std::cout << "Fatal Exception: " << except.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 
