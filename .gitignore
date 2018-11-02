@@ -1,0 +1,13 @@
+build/
+objs/
+asm/
+*.fns
+*.nes
+*.deb
+*.cdl
+*.o
+*.out
+*.exe
+*.dll
+*.lib
+*.obj
