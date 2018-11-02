@@ -8,7 +8,6 @@
 
 
 struct Color {
-	Color(Uint8 r, Uint8 g, Uint8 b) : r(r), g(g), b(b) {}
 	Uint8 r, g, b;
 };
 
