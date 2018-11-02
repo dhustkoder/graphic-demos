@@ -5,8 +5,13 @@
 #include <memory>
 #include <vector>
 #include <random>
+#include <stdexcept>
 #include <SDL2/SDL.h>
 
+
+#define WIN_WIDTH  (1920)
+#define WIN_HEIGHT (1080)
+#define MAX_RECTS  (50000)
 
 struct Color {
 	Uint8 r, g, b;
@@ -28,15 +33,15 @@ public:
 	Window()
 	{
 		if (SDL_Init(SDL_INIT_VIDEO) < 0)
-			throw std::string("Couldn't initialize SDL: ") + SDL_GetError();
+			throw std::runtime_error(std::string("Couldn't initialize SDL: ") + SDL_GetError());
 		
 		m_window = SDL_CreateWindow("OOP DEMO",
 		                          SDL_WINDOWPOS_CENTERED,
 					  SDL_WINDOWPOS_CENTERED,
-					  800, 600,
+					  WIN_WIDTH, WIN_HEIGHT,
 					  SDL_WINDOW_SHOWN);
 		if (m_window == nullptr)
-			throw std::string("Couldn't create window: ") + SDL_GetError();
+			throw std::runtime_error(std::string("Couldn't create window: ") + SDL_GetError());
 		
 	}
 
@@ -70,8 +75,7 @@ public:
 	{
 		m_renderer = SDL_CreateRenderer(window.m_window, -1, SDL_RENDERER_ACCELERATED);
 		if (m_renderer == nullptr)
-			throw std::string("Couldn't create renderer: ") + SDL_GetError();
-		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE); 
+			throw std::runtime_error(std::string("Couldn't create renderer: ") + SDL_GetError());
 	}
 
 	~Renderer()
@@ -82,8 +86,10 @@ public:
 
 	void Clear(const Color color)
 	{
-		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, 0xFF);
-		SDL_RenderClear(m_renderer);
+		if (SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, 0xFF) < 0)
+			throw std::runtime_error(std::string("Couldn't set render draw color: ") + SDL_GetError());
+		if (SDL_RenderClear(m_renderer) < 0)
+			throw std::runtime_error(std::string("Couldn't clear render: ") + SDL_GetError());
 	}
 
 	void Present()
@@ -216,29 +222,40 @@ int main(void)
 		std::unique_ptr<Game> game = std::make_unique<Game>();
 		std::vector<Rectangle> rects;
 
-		std::default_random_engine gen;
-		std::uniform_int_distribution<int> distPosX(0, 800);
-		std::uniform_int_distribution<int> distPosY(0, 600);
-		std::uniform_int_distribution<int> distVelX(-3, 3);
-		std::uniform_int_distribution<int> distVelY(-3, 3);
+		{
+			std::default_random_engine gen;
+			std::uniform_int_distribution<int> distPosX(0, WIN_WIDTH);
+			std::uniform_int_distribution<int> distPosY(0, WIN_HEIGHT);
+			std::uniform_int_distribution<int> distVelX(-3, 3);
+			std::uniform_int_distribution<int> distVelY(-3, 3);
+			std::uniform_int_distribution<Uint8> distColor(0x0F, 0xFF);
+			std::uniform_int_distribution<int> distSize(1, 3);
 
-		for (int i = 0; i < 55500; ++i) {
-			Rectangle rect({distVelX(gen), distVelY(gen)},
-			          {distPosX(gen), distPosY(gen)},
-			          {1, 1},
-			          {0xFF, 0x00, 0x00});
-			rects.push_back(rect);
+			for (int i = 0; i < MAX_RECTS; ++i) {
+				const int size = distSize(gen);
+				int velX = 0;
+				int velY = 0;
+				while (!velX)
+					velX = distVelX(gen);
+				while (!velY)
+					velY = distVelY(gen);
+				Rectangle rect({velX, velY},
+				          {distPosX(gen), distPosY(gen)},
+				          {size, size},
+				          {distColor(gen), distColor(gen), distColor(gen)});
+				rects.push_back(rect);
+			}
 		}
 
 		while (game->HandleEvents()) {
-			game->BeginFrame({0xDE, 0xDE, 0xDE});
+			game->BeginFrame({0x00, 0x00, 0x00});
 			
 			for (Rectangle& rect : rects) {
 				const Vec2i pos = rect.GetPos();
 				Vec2i vel = rect.GetVel();
-				if ((pos.x >= 800 && vel.x > 0) || (pos.x <= 0 && vel.x < 0))
+				if ((pos.x >= WIN_WIDTH && vel.x > 0) || (pos.x <= 0 && vel.x < 0))
 					vel.x = -vel.x;
-				if ((pos.y >= 600 && vel.y > 0) || (pos.y <= 0 && vel.y < 0))
+				if ((pos.y >= WIN_HEIGHT && vel.y > 0) || (pos.y <= 0 && vel.y < 0))
 					vel.y = -vel.y;
 
 				rect.SetVel(vel);
