@@ -9,9 +9,8 @@
 #include <SDL2/SDL.h>
 
 
-#define WIN_WIDTH  (1920)
-#define WIN_HEIGHT (1080)
-#define MAX_RECTS  (50000)
+#define WIN_WIDTH  (1280)
+#define WIN_HEIGHT (720)
 
 struct Color {
 	Uint8 r, g, b;
@@ -262,10 +261,7 @@ int main(void)
 	try {
 		std::unique_ptr<Game> game = std::make_unique<Game>();
 		std::vector<std::unique_ptr<Rectangle>> rects;
-
 		RandomRectangleFactory rrf;
-		for (int i = 0; i < MAX_RECTS; ++i)
-			rects.push_back(rrf.Make());
 
 		while (game->HandleEvents()) {
 			game->BeginFrame({0x00, 0x00, 0x00});
@@ -287,7 +283,16 @@ int main(void)
 			
 			
 			game->EndFrame();
+
+			if (game->GetFps() > 60) {
+				for (int i = 0; i < 50; ++i)
+					rects.push_back(rrf.Make());
+			} else if (game->GetFps() < 59 && rects.size() > 0) {
+				rects.pop_back();
+			}
+
 			std::cout << "FPS: " << game->GetFps() << '\n';
+			std::cout << "RECTS: " << rects.size() << '\n';
 		}
 
 	} catch(std::exception& except) {
