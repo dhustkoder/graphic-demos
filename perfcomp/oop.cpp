@@ -223,7 +223,7 @@ public:
 
 	}
 
-	std::unique_ptr<Rectangle> Make()
+	Rectangle Make()
 	{
 		const int size = m_distSize(m_gen);
 		
@@ -235,12 +235,14 @@ public:
 		while (!velY)
 			velY = m_distVel(m_gen);
 
-		return std::make_unique<Rectangle>(
+		return Rectangle(
 				Vec2i{velX, velY},
 				Vec2i{m_distPosX(m_gen), m_distPosY(m_gen)},
 				Vec2i{size, size},
-				Color{m_distColor(m_gen), m_distColor(m_gen), m_distColor(m_gen)}
-			);
+				Color{static_cast<Uint8>(m_distColor(m_gen)),
+                      static_cast<Uint8>(m_distColor(m_gen)),
+                      static_cast<Uint8>(m_distColor(m_gen))}
+		);
 	}
 
 private:
@@ -248,7 +250,7 @@ private:
 	std::uniform_int_distribution<int> m_distPosX;
 	std::uniform_int_distribution<int> m_distPosY;
 	std::uniform_int_distribution<int> m_distVel;
-	std::uniform_int_distribution<Uint8> m_distColor;
+	std::uniform_int_distribution<int> m_distColor;
 	std::uniform_int_distribution<int> m_distSize;
 };
 
@@ -256,29 +258,29 @@ private:
 
 
 
-int main(void)
+int main(int, char**)
 {
 	try {
 		std::unique_ptr<Game> game = std::make_unique<Game>();
-		std::vector<std::unique_ptr<Rectangle>> rects;
+		std::vector<Rectangle> rects;
 		RandomRectangleFactory rrf;
 
 		while (game->HandleEvents()) {
 			game->BeginFrame({0x00, 0x00, 0x00});
 			
-			for (const auto& rect : rects) {
-				const Vec2i pos = rect->GetPos();
-				Vec2i vel = rect->GetVel();
+			for (auto& rect : rects) {
+				const Vec2i pos = rect.GetPos();
+				Vec2i vel = rect.GetVel();
 				if ((pos.x >= WIN_WIDTH && vel.x > 0) || (pos.x <= 0 && vel.x < 0))
 					vel.x = -vel.x;
 				if ((pos.y >= WIN_HEIGHT && vel.y > 0) || (pos.y <= 0 && vel.y < 0))
 					vel.y = -vel.y;
 
-				rect->SetVel(vel);
+				rect.SetVel(vel);
 
-				rect->Update();
+				rect.Update();
 
-				rect->Draw(game->GetRenderer());
+				rect.Draw(game->GetRenderer());
 			}
 			
 			
