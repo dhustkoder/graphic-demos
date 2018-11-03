@@ -103,62 +103,6 @@ protected:
 };
 
 
-class Rectangle {
-public:
-	Rectangle(const Vec2i vel, const Vec2i pos, const Vec2i size, const Color color) :
-		m_vel(vel), m_pos(pos), m_size(size), m_color(color)
-	{
-	
-	}
-
-	void Draw(const Renderer& render)
-	{
-		SDL_Rect rect;
-		rect.x = m_pos.x;
-		rect.y = m_pos.y;
-		rect.w = m_size.x;
-		rect.h = m_size.y;
-		SDL_SetRenderDrawColor(render.m_renderer, m_color.r, m_color.g, m_color.b, 0xFF);
-		SDL_RenderFillRect(render.m_renderer, &rect);
-	}
-
-	void Update()
-	{
-		m_pos.x += m_vel.x;
-		m_pos.y += m_vel.y;
-	}
-
-	Vec2i GetPos()
-	{
-		return m_pos;
-	}
-
-	void SetPos(const Vec2i newPos)
-	{
-		m_pos = newPos;
-	}
-
-	Vec2i GetVel()
-	{
-		return m_vel;
-	}
-
-	void SetVel(const Vec2i newVel)
-	{
-		m_vel = newVel;
-	}
-
-private:
-	Vec2i m_vel;
-	Vec2i m_pos;
-	Vec2i m_size;
-	Color m_color;
-};
-
-
-
-
-
 class Game final : public Window, public Renderer {
 public:
 	Game() : Window(), Renderer(static_cast<Window&>(*this))
@@ -215,54 +159,130 @@ private:
 };
 
 
+class Rectangle {
+public:
+	Rectangle(const Vec2i vel, const Vec2i pos, const Vec2i size, const Color color) :
+		m_vel(vel), m_pos(pos), m_size(size), m_color(color)
+	{
+	
+	}
+
+	void Draw(const Renderer& render)
+	{
+		SDL_Rect rect;
+		rect.x = m_pos.x;
+		rect.y = m_pos.y;
+		rect.w = m_size.x;
+		rect.h = m_size.y;
+		SDL_SetRenderDrawColor(render.m_renderer, m_color.r, m_color.g, m_color.b, 0xFF);
+		SDL_RenderFillRect(render.m_renderer, &rect);
+	}
+
+	void Update()
+	{
+		m_pos.x += m_vel.x;
+		m_pos.y += m_vel.y;
+	}
+
+	Vec2i GetPos()
+	{
+		return m_pos;
+	}
+
+	void SetPos(const Vec2i newPos)
+	{
+		m_pos = newPos;
+	}
+
+	Vec2i GetVel()
+	{
+		return m_vel;
+	}
+
+	void SetVel(const Vec2i newVel)
+	{
+		m_vel = newVel;
+	}
+
+private:
+	Vec2i m_vel;
+	Vec2i m_pos;
+	Vec2i m_size;
+	Color m_color;
+};
+
+
+class RandomRectangleFactory {
+public:
+	RandomRectangleFactory() :
+		m_distPosX(0, WIN_WIDTH),
+		m_distPosY(0, WIN_HEIGHT),
+		m_distVel(-6, 6),
+		m_distColor(0x0F, 0xFF),
+		m_distSize(1, 3)
+	{
+
+	}
+
+	std::unique_ptr<Rectangle> Make()
+	{
+		const int size = m_distSize(m_gen);
+		
+		int velX = 0;
+		int velY = 0;
+
+		while (!velX)
+			velX = m_distVel(m_gen);
+		while (!velY)
+			velY = m_distVel(m_gen);
+
+		return std::make_unique<Rectangle>(
+				Vec2i{velX, velY},
+				Vec2i{m_distPosX(m_gen), m_distPosY(m_gen)},
+				Vec2i{size, size},
+				Color{m_distColor(m_gen), m_distColor(m_gen), m_distColor(m_gen)}
+			);
+	}
+
+private:
+	std::default_random_engine m_gen;
+	std::uniform_int_distribution<int> m_distPosX;
+	std::uniform_int_distribution<int> m_distPosY;
+	std::uniform_int_distribution<int> m_distVel;
+	std::uniform_int_distribution<Uint8> m_distColor;
+	std::uniform_int_distribution<int> m_distSize;
+};
+
+
+
+
 
 int main(void)
 {
 	try {
 		std::unique_ptr<Game> game = std::make_unique<Game>();
-		std::vector<Rectangle> rects;
+		std::vector<std::unique_ptr<Rectangle>> rects;
 
-		{
-			std::default_random_engine gen;
-			std::uniform_int_distribution<int> distPosX(0, WIN_WIDTH);
-			std::uniform_int_distribution<int> distPosY(0, WIN_HEIGHT);
-			std::uniform_int_distribution<int> distVelX(-6, 6);
-			std::uniform_int_distribution<int> distVelY(-6, 6);
-			std::uniform_int_distribution<Uint8> distColor(0x0F, 0xFF);
-			std::uniform_int_distribution<int> distSize(1, 3);
-
-			for (int i = 0; i < MAX_RECTS; ++i) {
-				const int size = distSize(gen);
-				int velX = 0;
-				int velY = 0;
-				while (!velX)
-					velX = distVelX(gen);
-				while (!velY)
-					velY = distVelY(gen);
-				Rectangle rect({velX, velY},
-				          {distPosX(gen), distPosY(gen)},
-				          {size, size},
-				          {distColor(gen), distColor(gen), distColor(gen)});
-				rects.push_back(rect);
-			}
-		}
+		RandomRectangleFactory rrf;
+		for (int i = 0; i < MAX_RECTS; ++i)
+			rects.push_back(rrf.Make());
 
 		while (game->HandleEvents()) {
 			game->BeginFrame({0x00, 0x00, 0x00});
 			
-			for (Rectangle& rect : rects) {
-				const Vec2i pos = rect.GetPos();
-				Vec2i vel = rect.GetVel();
+			for (const auto& rect : rects) {
+				const Vec2i pos = rect->GetPos();
+				Vec2i vel = rect->GetVel();
 				if ((pos.x >= WIN_WIDTH && vel.x > 0) || (pos.x <= 0 && vel.x < 0))
 					vel.x = -vel.x;
 				if ((pos.y >= WIN_HEIGHT && vel.y > 0) || (pos.y <= 0 && vel.y < 0))
 					vel.y = -vel.y;
 
-				rect.SetVel(vel);
+				rect->SetVel(vel);
 
-				rect.Update();
+				rect->Update();
 
-				rect.Draw(game->GetRenderer());
+				rect->Draw(game->GetRenderer());
 			}
 			
 			
