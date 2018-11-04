@@ -237,7 +237,7 @@ static void push_rect(void)
 	const GLfloat r = randnum(0.1, 0.5);
 	const GLfloat g = randnum(0.1, 0.5);
 	const GLfloat b = randnum(0.1, 0.5);
-	const GLfloat size = randnum(0.0001, 0.0010);
+	const GLfloat size = randnum(0.0001, 0.0013);
 	printf("POSX: %f\nPOSY: %f\nVELX: %f\nVELY: %f\nSIZE: %f\nR: %f\nG: %f\nB: %f\n\n", posx, posy, velx, vely, size, r, g, b);
 
 	poss[nrects].x = posx;
