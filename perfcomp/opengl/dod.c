@@ -5,6 +5,7 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
+#include <pcg_variants.h>
 
 
 #define WIN_WIDTH     (1280)
@@ -37,30 +38,14 @@ static SDL_GLContext glcontext = NULL;
 static GLuint vao = 0, vbo = 0;
 static GLuint sp_id = 0, vs_id = 0, fs_id = 0;
 
+static pcg64_random_t pcg_rnd;
 
-static GLfloat randnum(double mu, double sigma)
+
+static GLfloat randnum(double min, double max)
 {
-	double U1, U2, W, mult;
-	static double X1, X2;
-	static bool call = 0;
-
-	if (call) {
-		call = !call;
-		return (mu + sigma * (double) X2);
-	}
-
-	do {
-		U1 = -1 + ((double) rand () / RAND_MAX) * 2;
-		U2 = -1 + ((double) rand () / RAND_MAX) * 2;
-		W = pow (U1, 2) + pow (U2, 2);
-	} while (W >= 1 || W == 0);
-
-	mult = sqrt ((-2 * log (W)) / W);
-	X1 = U1 * mult;
-	X2 = U2 * mult;
-
-	call = !call;
-	return (mu + sigma * (double) X1);
+    double range = (max - min); 
+    double div = INT64_MAX / range;
+    return min + (pcg64_random_r(&pcg_rnd) / div);
 }
 
 static void terminate_system(void)
@@ -223,7 +208,9 @@ static bool initialize_system(void)
 	                      sizeof(GLfloat) * 5,
 	                      (void*)(sizeof(GLfloat) * 2));
 
-	srand(time(NULL));
+	pcg128_t seeds[2];
+	entropy_getbytes(seeds, sizeof(seeds));
+	pcg64_srandom_r(&pcg_rnd, seeds[0], seeds[1]);
 	return true;
 }
 
@@ -245,13 +232,13 @@ static void push_rect(void)
 	
 	const GLfloat posx = randnum(-0.005, 0.005);
 	const GLfloat posy = randnum(-0.005, 0.005);
-	const GLfloat velx = randnum(-0.0001, 0.001);
-	const GLfloat vely = randnum(-0.0001, 0.001);
-	const GLfloat r = randnum(0.2, 0.8);
-	const GLfloat g = randnum(0.2, 0.8);
-	const GLfloat b = randnum(0.2, 0.8);
-	const GLfloat size = randnum(0.0001, 0.0009);
-	//printf("POSX: %f\nPOSY: %f\nVELX: %f\nVELY: %f\n\n", posx, posy, velx, vely);
+	const GLfloat velx = randnum(-0.0019, 0.0001);
+	const GLfloat vely = randnum(-0.0019, 0.0001);
+	const GLfloat r = randnum(0.1, 0.5);
+	const GLfloat g = randnum(0.1, 0.5);
+	const GLfloat b = randnum(0.1, 0.5);
+	const GLfloat size = randnum(0.0001, 0.0010);
+	printf("POSX: %f\nPOSY: %f\nVELX: %f\nVELY: %f\nSIZE: %f\nR: %f\nG: %f\nB: %f\n\n", posx, posy, velx, vely, size, r, g, b);
 
 	poss[nrects].x = posx;
 	poss[nrects].y = posy;
