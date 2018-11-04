@@ -38,7 +38,7 @@ static GLuint vao = 0, vbo = 0;
 static GLuint sp_id = 0, vs_id = 0, fs_id = 0;
 
 
-static GLfloat randnum_normalized(double mu, double sigma)
+static GLfloat randnum(double mu, double sigma)
 {
 	double U1, U2, W, mult;
 	static double X1, X2;
@@ -243,14 +243,14 @@ static void push_rect(void)
 	if (nrects >= MAX_RECTS)
 		return;
 	
-	const GLfloat posx = randnum_normalized(-0.005, 0.005);
-	const GLfloat posy = randnum_normalized(-0.005, 0.005);
-	const GLfloat velx = randnum_normalized(-0.0001, 0.001);
-	const GLfloat vely = randnum_normalized(-0.0001, 0.001);
-	const GLfloat r = randnum_normalized(0.2, 0.8);
-	const GLfloat g = randnum_normalized(0.2, 0.8);
-	const GLfloat b = randnum_normalized(0.2, 0.8);
-	const GLfloat size = randnum_normalized(0.0001, 0.0009);
+	const GLfloat posx = randnum(-0.005, 0.005);
+	const GLfloat posy = randnum(-0.005, 0.005);
+	const GLfloat velx = randnum(-0.0001, 0.001);
+	const GLfloat vely = randnum(-0.0001, 0.001);
+	const GLfloat r = randnum(0.2, 0.8);
+	const GLfloat g = randnum(0.2, 0.8);
+	const GLfloat b = randnum(0.2, 0.8);
+	const GLfloat size = randnum(0.0001, 0.0009);
 	//printf("POSX: %f\nPOSY: %f\nVELX: %f\nVELY: %f\n\n", posx, posy, velx, vely);
 
 	poss[nrects].x = posx;
