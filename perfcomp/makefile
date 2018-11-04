@@ -1,8 +1,14 @@
 CC=gcc
 CXX=g++
 
-oop:
-	$(CXX) oop.cpp -O3 -Wall -Wextra -ffast-math -o oop -lSDL2
+all: oop dod
+
+oop: oop.cpp
+	$(CXX) $< -O3 -Wall -Wextra -ffast-math -o oop -lSDL2
+
+dod: dod.c
+	$(CC) $< -O3 -Wall -Wextra -ffast-math -o dod -lSDL2 -lGLEW -lGL
 
 clean:
 	rm -rf oop dod
+
