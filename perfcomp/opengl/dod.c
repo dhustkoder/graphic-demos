@@ -115,7 +115,7 @@ static bool initialize_system(void)
 	"	outcolor = frag_color;\n"
 	"}\n";
 
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
 		fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
 		return false;
 	}
@@ -243,8 +243,8 @@ static void push_rect(void)
 	if (nrects >= MAX_RECTS)
 		return;
 	
-	const GLfloat posx = randnum_normalized(-0.01, 0.01);
-	const GLfloat posy = randnum_normalized(-0.01, 0.01);
+	const GLfloat posx = randnum_normalized(-0.005, 0.005);
+	const GLfloat posy = randnum_normalized(-0.005, 0.005);
 	const GLfloat velx = randnum_normalized(-0.0001, 0.001);
 	const GLfloat vely = randnum_normalized(-0.0001, 0.001);
 	const GLfloat r = randnum_normalized(0.2, 0.8);
@@ -355,7 +355,7 @@ int main(int argc, char** argv)
 		}
 
 		printf("RECTS: %ld\n", nrects);
-		printf("FRAME TIME: %u ms\n", (end_ticks - start_ticks));
+		printf("FRAMES PER SECOND: %.2lf\n", 1000.0 / (end_ticks - start_ticks));
 	}
 
 	terminate_system();
