@@ -7,9 +7,10 @@
 #include <GL/glew.h>
 
 
-#define WIN_WIDTH  (1280)
-#define WIN_HEIGHT (720)
-#define MAX_RECTS  (500000)
+#define WIN_WIDTH     (1280)
+#define WIN_HEIGHT    (720)
+#define MAX_RECTS     (500000)
+#define MAX_VBO_BYTES (1024 * 1024) // quase 1G de VRAM 
 
 
 struct color {
@@ -157,8 +158,7 @@ static bool initialize_system(void)
 	glGenBuffers(1, &vbo);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER,
-	             sizeof(GLfloat) * 5 * 32000,
+	glBufferData(GL_ARRAY_BUFFER, MAX_VBO_BYTES,
 	             NULL, GL_DYNAMIC_DRAW);
 
 	sp_id = glCreateProgram();
@@ -329,17 +329,21 @@ int main(int argc, char** argv)
 			vertexs[i * 4 + 3].pos.y = posy + sizes[i];
 		}
 
-		if (nrects < 6000) {
+		const long max_rects_per_pack = MAX_VBO_BYTES / (sizeof(struct vertex) * 4);
+
+		if (nrects < max_rects_per_pack) {
 			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 4 * nrects, vertexs);
 			glDrawArrays(GL_QUADS, 0, nrects * 4);
 		} else {
-			const long packs = nrects / 6000;
+			const long packs = nrects / max_rects_per_pack;
 			for (long i = 0; i < packs; ++i) {
-				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 4 * 6000, &vertexs[i * 4 * 6000]);
-				glDrawArrays(GL_QUADS, 0, 6000 * 4);
+				glBufferSubData(GL_ARRAY_BUFFER, 0,
+				                sizeof(struct vertex) * 4 * max_rects_per_pack,
+				                &vertexs[i * 4 * max_rects_per_pack]);
+				glDrawArrays(GL_QUADS, 0, max_rects_per_pack * 4);
 			}
-			const long remaining = nrects - packs * 6000;
-			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 4 * remaining, &vertexs[packs * 6000 * 4]);
+			const long remaining = nrects - (packs * max_rects_per_pack);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 4 * remaining, &vertexs[packs * max_rects_per_pack * 4]);
 			glDrawArrays(GL_QUADS, 0, remaining * 4);
 			
 		}
@@ -347,7 +351,7 @@ int main(int argc, char** argv)
 
 		const Uint32 end_ticks = SDL_GetTicks();
 		if ((end_ticks - start_ticks) < 16) {
-			for (int i = 0; i < 50; ++i)
+			for (int i = 0; i < 100; ++i)
 				push_rect();
 		}
 
