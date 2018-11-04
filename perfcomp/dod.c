@@ -17,6 +17,12 @@ static GLuint sp_id = 0, vs_id = 0, fs_id = 0;
 
 static void terminate_system(void)
 {
+	if (vbo != 0)
+		glDeleteBuffers(1, &vbo);
+
+	if (vao != 0)
+		glDeleteVertexArrays(1, &vao);
+
 	if (fs_id != 0) {
 		glDetachShader(sp_id, fs_id);
 		glDeleteShader(fs_id);
@@ -141,8 +147,6 @@ static bool initialize_system(void)
 		return false;
 	}
 
-	glAttachShader(sp_id, vs_id);
-
 
 	// compile fragment shader
 	glShaderSource(fs_id, 1, &fs_src, NULL);
@@ -150,13 +154,14 @@ static bool initialize_system(void)
 	
 	glGetShaderiv(fs_id, GL_COMPILE_STATUS, &shader_success);
 	if (shader_success == GL_FALSE) {
-		fprintf(stderr, "Couldn't compile Vertex Shader\n");
+		fprintf(stderr, "Couldn't compile Fragment Shader\n");
 		terminate_system();
 		return false;
 	}
 
-	glAttachShader(sp_id, fs_id);
 
+	glAttachShader(sp_id, vs_id);
+	glAttachShader(sp_id, fs_id);
 	glLinkProgram(sp_id);
 	glUseProgram(sp_id);
 
@@ -170,8 +175,6 @@ static bool initialize_system(void)
 	glVertexAttribPointer(rgb_attrib, 3, GL_FLOAT, GL_TRUE,
 	                      sizeof(GLfloat) * 5,
 	                      (void*)(sizeof(GLfloat) * 2));
-
-
 
 	return true;
 }
