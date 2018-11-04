@@ -2,18 +2,27 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
+#include <sys/random.h>
 
 #define WIN_WIDTH  (800)
 #define WIN_HEIGHT (600)
-
+#define CLAMP(val, min, max) (val < min ? min : val > max ? max : val)
 
 static SDL_Window* window = NULL;
 static SDL_GLContext glcontext = NULL;
 static GLuint vao = 0, vbo = 0;
 static GLuint sp_id = 0, vs_id = 0, fs_id = 0;
 
+
+static GLfloat randnum_normalized()
+{
+	const long rnd = rand();
+	const GLfloat normalized = rnd / ((double)RAND_MAX);
+	return rnd > (RAND_MAX / 2) ? normalized : -normalized;
+}
 
 static void terminate_system(void)
 {
@@ -110,7 +119,7 @@ static bool initialize_system(void)
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-	             sizeof(GLfloat) * 1024,
+	             sizeof(GLfloat) * 5 * 32000,
 	             NULL, GL_DYNAMIC_DRAW);
 
 	sp_id = glCreateProgram();
@@ -172,10 +181,11 @@ static bool initialize_system(void)
 	glEnableVertexAttribArray(rgb_attrib);
 	glVertexAttribPointer(pos_attrib, 2, GL_FLOAT, GL_TRUE,
 	                      sizeof(GLfloat) * 5, NULL);
-	glVertexAttribPointer(rgb_attrib, 3, GL_FLOAT, GL_TRUE,
+	glVertexAttribPointer(rgb_attrib, 3, GL_FLOAT, GL_FALSE,
 	                      sizeof(GLfloat) * 5,
 	                      (void*)(sizeof(GLfloat) * 2));
 
+	srand(time(NULL));
 	return true;
 }
 
@@ -196,43 +206,104 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 
 
+	SDL_GL_SetSwapInterval(0);
+
+
+	struct color {
+		GLfloat r, g, b;
+	};
+
+	struct vec2f {
+		GLfloat x, y;
+	};
+
+	struct vertex {
+		struct vec2f pos;
+		struct color color;
+	};
+
+	struct vertex* vertexs = malloc(sizeof(struct vertex) * 4 * 32000);
+	struct vec2f* vels = malloc(sizeof(struct vec2f) * 32000);
+	struct vec2f* poss = malloc(sizeof(struct vec2f) * 32000);
+
+	for (int i = 0; i < 32000 * 4; i += 4) {
+		const GLfloat posx = randnum_normalized();
+		const GLfloat posy = randnum_normalized();
+		const GLfloat velx = randnum_normalized() / 1;
+		const GLfloat vely = randnum_normalized() / 1;
+
+		poss[i/4].x = posx;
+		poss[i/4].y = posy;
+		vels[i/4].x = CLAMP(velx, 0.005, 0.1);
+		vels[i/4].y = CLAMP(vely, 0.005, 0.1);
+
+		vertexs[i].pos.x = posx - 0.001;
+		vertexs[i].pos.y = posy - 0.001;
+		vertexs[i].color.r = 0xFF;
+		vertexs[i].color.g = 0xFF;
+		vertexs[i].color.b = 0xFF;
+
+		vertexs[i + 1].pos.x = posx + 0.001;
+		vertexs[i + 1].pos.y = posy - 0.001;
+		vertexs[i + 1].color.r = 0xFF;
+		vertexs[i + 1].color.g = 0xFF;
+		vertexs[i + 1].color.b = 0xFF;
+
+		vertexs[i + 2].pos.x = posx + 0.001;
+		vertexs[i + 2].pos.y = posy + 0.001;
+		vertexs[i + 2].color.r = 0xFF;
+		vertexs[i + 2].color.g = 0xFF;
+		vertexs[i + 2].color.b = 0xFF;
+
+		vertexs[i + 3].pos.x = posx - 0.001;
+		vertexs[i + 3].pos.y = posy + 0.001;
+		vertexs[i + 3].color.r = 0xFF;
+		vertexs[i + 3].color.g = 0xFF;
+		vertexs[i + 3].color.b = 0xFF;
+	}
+
 	while (handle_events()) {
+		const Uint32 start_ticks = SDL_GetTicks();
+		
 		glClearColor(0x00, 0x00, 0x00, 0xFF);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		GLfloat* mapbuff = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-		
-		mapbuff[0] = -0.5;
-		mapbuff[1] = -0.5;
-		mapbuff[2] = 0xFF;
-		mapbuff[3] = 0;
-		mapbuff[4] = 0;
-		mapbuff += 5;
 
-		mapbuff[0] = 0.5;
-		mapbuff[1] = -0.5;
-		mapbuff[2] = 0;
-		mapbuff[3] = 0xFF;
-		mapbuff[4] = 0;
-		mapbuff += 5;
+	for (int i = 0; i < 32000 * 4; i += 4) {
 
-		mapbuff[0] = 0.5;
-		mapbuff[1] = 0.5;
-		mapbuff[2] = 0;
-		mapbuff[3] = 0;
-		mapbuff[4] = 0xFF;
-		mapbuff += 5;
+		if (poss[i/4].x < -1.0 || poss[i/4].x > 1.0)
+			vels[i/4].x = -vels[i/4].x;
+		if (poss[i/4].y < -1.0 || poss[i/4].y > 1.0)
+			vels[i/4].y = -vels[i/4].y;
 
-		mapbuff[0] = -0.5;
-		mapbuff[1] = 0.5;
-		mapbuff[2] = 0xFF;
-		mapbuff[3] = 0xFF;
-		mapbuff[4] = 0xFF;
+		poss[i/4].x += vels[i/4].x;
+		poss[i/4].y += vels[i/4].y;
 
-		glUnmapBuffer(GL_ARRAY_BUFFER);
-		glDrawArrays(GL_QUADS, 0, 4);
+		const GLfloat posx = poss[i/4].x;
+		const GLfloat posy = poss[i/4].y;
 
-		SDL_GL_SwapWindow(window);	
+		vertexs[i].pos.x = posx - 0.001;
+		vertexs[i].pos.y = posy - 0.001;
+
+		vertexs[i + 1].pos.x = posx + 0.001;
+		vertexs[i + 1].pos.y = posy - 0.001;
+
+		vertexs[i + 2].pos.x = posx + 0.001;
+		vertexs[i + 2].pos.y = posy + 0.001;
+
+		vertexs[i + 3].pos.x = posx - 0.001;
+		vertexs[i + 3].pos.y = posy + 0.001;
+	}
+
+
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 32000, vertexs);
+		glDrawArrays(GL_QUADS, 0, 32000 * 4);
+		SDL_GL_SwapWindow(window);
+
+		const Uint32 end_ticks = SDL_GetTicks();
+
+		printf("FRAME TIME: %u ms\n", (end_ticks - start_ticks));
+
 	}
 
 	terminate_system();

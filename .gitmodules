@@ -1,0 +1,3 @@
+[submodule "externals/true-random"]
+	path = externals/true-random
+	url = https://github.com/jaybosamiya/true-random
