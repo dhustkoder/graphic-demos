@@ -6,10 +6,10 @@
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 #include <pcg_variants.h>
+#include <entropy.h>
 
-
-#define WIN_WIDTH     (1280)
-#define WIN_HEIGHT    (720)
+#define WIN_WIDTH     (1920)
+#define WIN_HEIGHT    (1080)
 #define MAX_VBO_BYTES (1024 * 1024) // 1G de VRAM 
 #define MAX_RECTS     (500000)
 
@@ -45,7 +45,10 @@ static GLfloat randnum(double min, double max)
 {
     double range = (max - min); 
     double div = INT64_MAX / range;
-    return min + (pcg64_random_r(&pcg_rnd) / div);
+    double result = min + (pcg64_random_r(&pcg_rnd) / div);
+    while (result < min || result > max)
+	    result = min + (pcg64_random_r(&pcg_rnd) / div);
+    return result;
 }
 
 static void terminate_system(void)
@@ -230,15 +233,16 @@ static void push_rect(void)
 	if (nrects >= MAX_RECTS)
 		return;
 	
-	const GLfloat posx = randnum(-0.005, 0.005);
-	const GLfloat posy = randnum(-0.005, 0.005);
-	const GLfloat velx = randnum(-0.0019, 0.0001);
-	const GLfloat vely = randnum(-0.0019, 0.0001);
-	const GLfloat r = randnum(0.1, 0.5);
-	const GLfloat g = randnum(0.1, 0.5);
-	const GLfloat b = randnum(0.1, 0.5);
-	const GLfloat size = randnum(0.0001, 0.0013);
-	printf("POSX: %f\nPOSY: %f\nVELX: %f\nVELY: %f\nSIZE: %f\nR: %f\nG: %f\nB: %f\n\n", posx, posy, velx, vely, size, r, g, b);
+	const GLfloat posx = randnum(-0.00005, 0.00005);
+	const GLfloat posy = randnum(-0.00005, 0.00005);
+	const GLfloat velx = randnum(-0.0015, 0.0015);
+	const GLfloat vely = randnum(-0.0015, 0.0015);
+	const GLfloat r = randnum(0.1, randnum(0.1, 1));
+	const GLfloat g = randnum(0.1, randnum(0.1, 1));
+	const GLfloat b = randnum(0.1, randnum(0.1, 1));
+	const GLfloat size = randnum(0.0009, 0.0018);
+	//printf("POSX: %f\nPOSY: %f\nVELX: %f\nVELY: %f\nSIZE: %f\nR: %f\nG: %f\nB: %f\n\n",
+	//      posx, posy, velx, vely, size, r, g, b);
 
 	poss[nrects].x = posx;
 	poss[nrects].y = posy;
