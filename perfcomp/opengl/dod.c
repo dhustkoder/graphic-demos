@@ -5,7 +5,6 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
-#include <sys/random.h>
 
 
 #define WIN_WIDTH  (1280)
