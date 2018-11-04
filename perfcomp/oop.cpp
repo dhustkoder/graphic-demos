@@ -173,8 +173,11 @@ public:
 		rect.y = m_pos.y;
 		rect.w = m_size.x;
 		rect.h = m_size.y;
-		SDL_SetRenderDrawColor(render.m_renderer, m_color.r, m_color.g, m_color.b, 0xFF);
-		SDL_RenderFillRect(render.m_renderer, &rect);
+		if (SDL_SetRenderDrawColor(render.m_renderer, m_color.r, m_color.g, m_color.b, 0xFF) < 0)
+			throw std::runtime_error(std::string("Couldn't set render draw color: ") + SDL_GetError());
+
+		if (SDL_RenderFillRect(render.m_renderer, &rect) < 0)
+			throw std::runtime_error(std::string("Couldn't fill rect render: ") + SDL_GetError());
 	}
 
 	void Update()
