@@ -217,8 +217,8 @@ private:
 class RandomRectangleFactory {
 public:
 	RandomRectangleFactory() :
-		m_distPosX(0, WIN_WIDTH),
-		m_distPosY(0, WIN_HEIGHT),
+		m_distPosX((WIN_WIDTH/2) - 10, (WIN_WIDTH/2) + 10),
+		m_distPosY((WIN_HEIGHT/2) - 10, (WIN_HEIGHT/2) + 10),
 		m_distVel(-6, 6),
 		m_distColor(0x0F, 0xFF),
 		m_distSize(1, 3)
@@ -233,10 +233,10 @@ public:
 		int velX = 0;
 		int velY = 0;
 
-		while (!velX)
+		while (!velX || !velY) {
 			velX = m_distVel(m_gen);
-		while (!velY)
 			velY = m_distVel(m_gen);
+		}
 
 		return Rectangle(
 				Vec2i{velX, velY},
@@ -249,7 +249,7 @@ public:
 	}
 
 private:
-	std::default_random_engine m_gen;
+	std::mt19937 m_gen;
 	std::uniform_int_distribution<int> m_distPosX;
 	std::uniform_int_distribution<int> m_distPosY;
 	std::uniform_int_distribution<int> m_distVel;

@@ -7,9 +7,31 @@
 #include <GL/glew.h>
 #include <sys/random.h>
 
-#define WIN_WIDTH  (800)
-#define WIN_HEIGHT (600)
-#define CLAMP(val, min, max) (val < min ? min : val > max ? max : val)
+
+#define WIN_WIDTH  (1280)
+#define WIN_HEIGHT (720)
+#define MAX_RECTS  (500000)
+
+
+struct color {
+	GLfloat r, g, b;
+};
+
+struct vec2f {
+	GLfloat x, y;
+};
+
+struct vertex {
+	struct vec2f pos;
+	struct color color;
+};
+
+
+static struct vertex vertexs[MAX_RECTS * 4];
+static struct vec2f vels[MAX_RECTS];
+static struct vec2f poss[MAX_RECTS];
+static GLfloat sizes[MAX_RECTS];
+static long nrects = 0;
 
 static SDL_Window* window = NULL;
 static SDL_GLContext glcontext = NULL;
@@ -17,11 +39,29 @@ static GLuint vao = 0, vbo = 0;
 static GLuint sp_id = 0, vs_id = 0, fs_id = 0;
 
 
-static GLfloat randnum_normalized()
+static GLfloat randnum_normalized(double mu, double sigma)
 {
-	const long rnd = rand();
-	const GLfloat normalized = rnd / ((double)RAND_MAX);
-	return rnd > (RAND_MAX / 2) ? normalized : -normalized;
+	double U1, U2, W, mult;
+	static double X1, X2;
+	static bool call = 0;
+
+	if (call) {
+		call = !call;
+		return (mu + sigma * (double) X2);
+	}
+
+	do {
+		U1 = -1 + ((double) rand () / RAND_MAX) * 2;
+		U2 = -1 + ((double) rand () / RAND_MAX) * 2;
+		W = pow (U1, 2) + pow (U2, 2);
+	} while (W >= 1 || W == 0);
+
+	mult = sqrt ((-2 * log (W)) / W);
+	X1 = U1 * mult;
+	X2 = U2 * mult;
+
+	call = !call;
+	return (mu + sigma * (double) X1);
 }
 
 static void terminate_system(void)
@@ -65,7 +105,7 @@ static bool initialize_system(void)
 	"void main()\n"
 	"{\n"
 	"	gl_Position = vec4(pos, 0.0, 1.0);\n"
-	"	frag_color = vec4(rgb / 255.0, 1.0);\n"
+	"	frag_color = vec4(rgb, 1.0);\n"
 	"}\n";
 	const GLchar* const fs_src =
 	"#version 130\n"
@@ -200,67 +240,62 @@ static bool handle_events(void)
 }
 
 
+static void push_rect(void)
+{
+	if (nrects >= MAX_RECTS)
+		return;
+	
+	const GLfloat posx = randnum_normalized(-0.01, 0.01);
+	const GLfloat posy = randnum_normalized(-0.01, 0.01);
+	const GLfloat velx = randnum_normalized(-0.0001, 0.001);
+	const GLfloat vely = randnum_normalized(-0.0001, 0.001);
+	const GLfloat r = randnum_normalized(0.2, 0.8);
+	const GLfloat g = randnum_normalized(0.2, 0.8);
+	const GLfloat b = randnum_normalized(0.2, 0.8);
+	const GLfloat size = randnum_normalized(0.0001, 0.0009);
+	//printf("POSX: %f\nPOSY: %f\nVELX: %f\nVELY: %f\n\n", posx, posy, velx, vely);
+
+	poss[nrects].x = posx;
+	poss[nrects].y = posy;
+	vels[nrects].x = velx;
+	vels[nrects].y = vely;
+	sizes[nrects] = size;
+
+	vertexs[nrects * 4].pos.x = posx - size;
+	vertexs[nrects * 4].pos.y = posy - size;
+	vertexs[nrects * 4].color.r = r;
+	vertexs[nrects * 4].color.g = g;
+	vertexs[nrects * 4].color.b = b;
+
+	vertexs[nrects * 4 + 1].pos.x = posx + size;
+	vertexs[nrects * 4 + 1].pos.y = posy - size;
+	vertexs[nrects * 4 + 1].color.r = r;
+	vertexs[nrects * 4 + 1].color.g = g;
+	vertexs[nrects * 4 + 1].color.b = b;
+
+	vertexs[nrects * 4 + 2].pos.x = posx + size;
+	vertexs[nrects * 4 + 2].pos.y = posy + size;
+	vertexs[nrects * 4 + 2].color.r = r;
+	vertexs[nrects * 4 + 2].color.g = g;
+	vertexs[nrects * 4 + 2].color.b = b;
+
+	vertexs[nrects * 4 + 3].pos.x = posx - size;
+	vertexs[nrects * 4 + 3].pos.y = posy + size;
+	vertexs[nrects * 4 + 3].color.r = r;
+	vertexs[nrects * 4 + 3].color.g = g;
+	vertexs[nrects * 4 + 3].color.b = b;
+
+	++nrects;
+}
+
+
+
 int main(int argc, char** argv)
 {
 	if (!initialize_system())
 		return EXIT_FAILURE;
 
-
 	SDL_GL_SetSwapInterval(0);
-
-
-	struct color {
-		GLfloat r, g, b;
-	};
-
-	struct vec2f {
-		GLfloat x, y;
-	};
-
-	struct vertex {
-		struct vec2f pos;
-		struct color color;
-	};
-
-	struct vertex* vertexs = malloc(sizeof(struct vertex) * 4 * 32000);
-	struct vec2f* vels = malloc(sizeof(struct vec2f) * 32000);
-	struct vec2f* poss = malloc(sizeof(struct vec2f) * 32000);
-
-	for (int i = 0; i < 32000 * 4; i += 4) {
-		const GLfloat posx = randnum_normalized();
-		const GLfloat posy = randnum_normalized();
-		const GLfloat velx = randnum_normalized() / 1;
-		const GLfloat vely = randnum_normalized() / 1;
-
-		poss[i/4].x = posx;
-		poss[i/4].y = posy;
-		vels[i/4].x = CLAMP(velx, 0.005, 0.1);
-		vels[i/4].y = CLAMP(vely, 0.005, 0.1);
-
-		vertexs[i].pos.x = posx - 0.001;
-		vertexs[i].pos.y = posy - 0.001;
-		vertexs[i].color.r = 0xFF;
-		vertexs[i].color.g = 0xFF;
-		vertexs[i].color.b = 0xFF;
-
-		vertexs[i + 1].pos.x = posx + 0.001;
-		vertexs[i + 1].pos.y = posy - 0.001;
-		vertexs[i + 1].color.r = 0xFF;
-		vertexs[i + 1].color.g = 0xFF;
-		vertexs[i + 1].color.b = 0xFF;
-
-		vertexs[i + 2].pos.x = posx + 0.001;
-		vertexs[i + 2].pos.y = posy + 0.001;
-		vertexs[i + 2].color.r = 0xFF;
-		vertexs[i + 2].color.g = 0xFF;
-		vertexs[i + 2].color.b = 0xFF;
-
-		vertexs[i + 3].pos.x = posx - 0.001;
-		vertexs[i + 3].pos.y = posy + 0.001;
-		vertexs[i + 3].color.r = 0xFF;
-		vertexs[i + 3].color.g = 0xFF;
-		vertexs[i + 3].color.b = 0xFF;
-	}
 
 	while (handle_events()) {
 		const Uint32 start_ticks = SDL_GetTicks();
@@ -269,41 +304,56 @@ int main(int argc, char** argv)
 		glClear(GL_COLOR_BUFFER_BIT);
 
 
-	for (int i = 0; i < 32000 * 4; i += 4) {
+		for (long i = 0; i < nrects; ++i) {
 
-		if (poss[i/4].x < -1.0 || poss[i/4].x > 1.0)
-			vels[i/4].x = -vels[i/4].x;
-		if (poss[i/4].y < -1.0 || poss[i/4].y > 1.0)
-			vels[i/4].y = -vels[i/4].y;
+			if (poss[i].x < -1.0 || poss[i].x > 1.0)
+				vels[i].x = -vels[i].x;
+			if (poss[i].y < -1.0 || poss[i].y > 1.0)
+				vels[i].y = -vels[i].y;
 
-		poss[i/4].x += vels[i/4].x;
-		poss[i/4].y += vels[i/4].y;
+			poss[i].x += vels[i].x;
+			poss[i].y += vels[i].y;
 
-		const GLfloat posx = poss[i/4].x;
-		const GLfloat posy = poss[i/4].y;
+			const GLfloat posx = poss[i].x;
+			const GLfloat posy = poss[i].y;
 
-		vertexs[i].pos.x = posx - 0.001;
-		vertexs[i].pos.y = posy - 0.001;
+			vertexs[i * 4].pos.x = posx - sizes[i];
+			vertexs[i * 4].pos.y = posy - sizes[i];
 
-		vertexs[i + 1].pos.x = posx + 0.001;
-		vertexs[i + 1].pos.y = posy - 0.001;
+			vertexs[i * 4 + 1].pos.x = posx + sizes[i];
+			vertexs[i * 4 + 1].pos.y = posy - sizes[i];
 
-		vertexs[i + 2].pos.x = posx + 0.001;
-		vertexs[i + 2].pos.y = posy + 0.001;
+			vertexs[i * 4 + 2].pos.x = posx + sizes[i];
+			vertexs[i * 4 + 2].pos.y = posy + sizes[i];
 
-		vertexs[i + 3].pos.x = posx - 0.001;
-		vertexs[i + 3].pos.y = posy + 0.001;
-	}
+			vertexs[i * 4 + 3].pos.x = posx - sizes[i];
+			vertexs[i * 4 + 3].pos.y = posy + sizes[i];
+		}
 
-
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 32000, vertexs);
-		glDrawArrays(GL_QUADS, 0, 32000 * 4);
+		if (nrects < 6000) {
+			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 4 * nrects, vertexs);
+			glDrawArrays(GL_QUADS, 0, nrects * 4);
+		} else {
+			const long packs = nrects / 6000;
+			for (long i = 0; i < packs; ++i) {
+				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 4 * 6000, &vertexs[i * 4 * 6000]);
+				glDrawArrays(GL_QUADS, 0, 6000 * 4);
+			}
+			const long remaining = nrects - packs * 6000;
+			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 4 * remaining, &vertexs[packs * 6000 * 4]);
+			glDrawArrays(GL_QUADS, 0, remaining * 4);
+			
+		}
 		SDL_GL_SwapWindow(window);
 
 		const Uint32 end_ticks = SDL_GetTicks();
+		if ((end_ticks - start_ticks) < 16) {
+			for (int i = 0; i < 50; ++i)
+				push_rect();
+		}
 
+		printf("RECTS: %ld\n", nrects);
 		printf("FRAME TIME: %u ms\n", (end_ticks - start_ticks));
-
 	}
 
 	terminate_system();
