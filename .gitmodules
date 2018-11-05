@@ -1,3 +1,0 @@
-[submodule "externals/pcg-c"]
-	path = externals/pcg-c
-	url = https://github.com/imneme/pcg-c
