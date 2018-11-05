@@ -4,7 +4,7 @@ CXX=g++
 all: rand.o oop dod
 
 oop: oop.cpp
-	$(CXX) $< -O3 -Wall -Wextra -ffast-math -o oop -lSDL2
+	$(CXX) $< -O3 -Wall -Wextra -ffast-math -o oop -lSDL2 -lGLEW -lGL -lm
 
 dod: rand.o dod.c
 	$(CXX) $^ -O3 -Wall -Wextra -ffast-math -fno-exceptions -o dod -lSDL2 -lGLEW -lGL -lm

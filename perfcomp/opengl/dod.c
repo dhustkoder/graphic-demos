@@ -8,8 +8,8 @@
 #include <GL/glew.h>
 #include "rand.h"
 
-#define WIN_WIDTH     (1920)
-#define WIN_HEIGHT    (1080)
+#define WIN_WIDTH  (1280)
+#define WIN_HEIGHT (720)
 #define MAX_VBO_BYTES (1024 * 1024) // 1G de VRAM 
 #define MAX_RECTS     (500000)
 

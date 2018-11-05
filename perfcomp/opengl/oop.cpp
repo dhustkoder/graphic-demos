@@ -7,22 +7,21 @@
 #include <random>
 #include <stdexcept>
 #include <SDL2/SDL.h>
+#include <GL/glew.h>
 
 
 #define WIN_WIDTH  (1280)
 #define WIN_HEIGHT (720)
+#define MAX_VBO_BYTES (1024 * 1024) // 1G de VRAM 
 
 struct Color {
-	Uint8 r, g, b;
+	GLfloat r, g, b;
 };
 
 struct Vec2f {
-	float x, y;
+	GLfloat x, y;
 };
 
-struct Vec2i {
-	Sint32 x, y;
-};
 
 
 class Renderer;
@@ -38,7 +37,7 @@ public:
 		                          SDL_WINDOWPOS_CENTERED,
 					  SDL_WINDOWPOS_CENTERED,
 					  WIN_WIDTH, WIN_HEIGHT,
-					  SDL_WINDOW_SHOWN);
+					  SDL_WINDOW_SHOWN|SDL_WINDOW_OPENGL);
 		if (m_window == nullptr)
 			throw std::runtime_error(std::string("Couldn't create window: ") + SDL_GetError());
 		
@@ -70,35 +69,156 @@ class Rectangle;
 class Renderer {
 	friend class Rectangle;
 public:
-	Renderer(const Window& window)
+	Renderer(const Window& window) :
+		m_window(window)
 	{
-		m_renderer = SDL_CreateRenderer(window.m_window, -1, SDL_RENDERER_ACCELERATED);
-		if (m_renderer == nullptr)
-			throw std::runtime_error(std::string("Couldn't create renderer: ") + SDL_GetError());
+		const GLchar* const vs_src =
+		"#version 130\n"
+		"in vec2 pos;\n"
+		"in vec3 rgb;\n"
+		"out vec4 frag_color;\n"
+		"void main()\n"
+		"{\n"
+		"	gl_Position = vec4(pos, 0.0, 1.0);\n"
+		"	frag_color = vec4(rgb, 1.0);\n"
+		"}\n";
+		const GLchar* const fs_src =
+		"#version 130\n"
+		"in vec4 frag_color;\n"
+		"out vec4 outcolor;\n"
+		"void main()\n"
+		"{\n"
+		"	outcolor = frag_color;\n"
+		"}\n";
+
+		if (SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1) < 0)
+			throw std::string("Couldn't set GL DOUBLE BUFFER");
+
+		m_glcontext = SDL_GL_CreateContext(window.m_window);
+		if (m_glcontext == NULL)
+			throw std::string("Couldn't create GL Context: ") +  SDL_GetError();
+
+		GLenum err;
+		if ((err = glewInit()) != GLEW_OK)
+			throw std::string("GLEW Error: ") + reinterpret_cast<const char*>(glewGetErrorString(err));
+
+		glGenVertexArrays(1, &m_vao);
+		glGenBuffers(1, &m_vbo);
+		glBindVertexArray(m_vao);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+		glBufferData(GL_ARRAY_BUFFER, MAX_VBO_BYTES,
+		             NULL, GL_DYNAMIC_DRAW);
+
+		m_sp_id = glCreateProgram();
+		if (m_sp_id == 0)
+			throw std::string("Couldn't create GL Program");
+
+		m_vs_id = glCreateShader(GL_VERTEX_SHADER);
+		if (m_vs_id == 0)
+			throw std::string("Couldn't create Vertex Shader");
+
+		m_fs_id = glCreateShader(GL_FRAGMENT_SHADER);
+		if (m_fs_id == 0) 
+			throw std::string("Couldn't create Fragment Shader");
+
+		// compile vertex shader
+		glShaderSource(m_vs_id, 1, &vs_src, NULL);
+		glCompileShader(m_vs_id);
+		
+		GLint shader_success;
+
+		glGetShaderiv(m_vs_id, GL_COMPILE_STATUS, &shader_success);
+		if (shader_success == GL_FALSE)
+			throw std::string("Couldn't compile Vertex Shader\n");
+
+
+		// compile fragment shader
+		glShaderSource(m_fs_id, 1, &fs_src, NULL);
+		glCompileShader(m_fs_id);
+		
+		glGetShaderiv(m_fs_id, GL_COMPILE_STATUS, &shader_success);
+		if (shader_success == GL_FALSE)
+			throw std::string("Couldn't compile Fragment Shader\n");
+
+
+		glAttachShader(m_sp_id, m_vs_id);
+		glAttachShader(m_sp_id, m_fs_id);
+		glLinkProgram(m_sp_id);
+		glUseProgram(m_sp_id);
+
+		const GLint pos_attrib = glGetAttribLocation(m_sp_id, "pos");
+		const GLint rgb_attrib = glGetAttribLocation(m_sp_id, "rgb");
+
+		glEnableVertexAttribArray(pos_attrib);
+		glEnableVertexAttribArray(rgb_attrib);
+		glVertexAttribPointer(pos_attrib, 2, GL_FLOAT, GL_TRUE,
+		                      sizeof(GLfloat) * 5, NULL);
+		glVertexAttribPointer(rgb_attrib, 3, GL_FLOAT, GL_FALSE,
+		                      sizeof(GLfloat) * 5,
+		                      (void*)(sizeof(GLfloat) * 2));
+
+		SDL_GL_SetSwapInterval(0);
 	}
 
 	~Renderer()
 	{
-		if (m_renderer != nullptr)
-			SDL_DestroyRenderer(m_renderer);
+		if (m_vbo != 0)
+			glDeleteBuffers(1, &m_vbo);
+
+		if (m_vao != 0)
+			glDeleteVertexArrays(1, &m_vao);
+
+		if (m_fs_id != 0) {
+			glDetachShader(m_sp_id, m_fs_id);
+			glDeleteShader(m_fs_id);
+		}
+
+		if (m_vs_id != 0) {
+			glDetachShader(m_sp_id, m_vs_id);
+			glDeleteShader(m_vs_id);
+		}
+
+		if (m_sp_id != 0)
+			glDeleteProgram(m_sp_id);
+
+		if (m_glcontext != NULL)
+			SDL_GL_DeleteContext(m_glcontext);
+	}
+
+	void PushVerts(const void* const verts, const int x)
+	{
+		if (((x * sizeof(GLfloat) * 5) + (m_verts_pushed * sizeof(GLfloat) * 5)) >= MAX_VBO_BYTES) {
+			glDrawArrays(GL_QUADS, 0, m_verts_pushed * 4);
+			m_verts_pushed = 0;
+		}
+
+		glBufferSubData(GL_ARRAY_BUFFER,
+		                m_verts_pushed * sizeof(GLfloat) * 5,
+		                x * sizeof(GLfloat) * 5, verts);
+
+		m_verts_pushed += x;
 	}
 
 	void Clear(const Color color)
 	{
-		if (SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, 0xFF) < 0)
-			throw std::runtime_error(std::string("Couldn't set render draw color: ") + SDL_GetError());
-		if (SDL_RenderClear(m_renderer) < 0)
-			throw std::runtime_error(std::string("Couldn't clear render: ") + SDL_GetError());
+		glClearColor(color.r, color.g, color.b, 0xFF);
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
 	void Present()
 	{
-		SDL_RenderPresent(m_renderer);
+		glDrawArrays(GL_QUADS, 0, m_verts_pushed * 4);
+		SDL_GL_SwapWindow(m_window.m_window);
+		m_verts_pushed = 0;
 	}
 
 
 protected:
-	SDL_Renderer* m_renderer = nullptr;
+	const Window& m_window;
+	SDL_GLContext m_glcontext = NULL;
+	GLuint m_vao = 0, m_vbo = 0;
+	GLuint m_sp_id = 0, m_vs_id = 0, m_fs_id = 0;
+	long m_verts_pushed = 0;
 };
 
 
@@ -160,24 +280,36 @@ private:
 
 class Rectangle {
 public:
-	Rectangle(const Vec2i vel, const Vec2i pos, const Vec2i size, const Color color) :
+	Rectangle(const Vec2f vel, const Vec2f pos, const Vec2f size, const Color color) :
 		m_vel(vel), m_pos(pos), m_size(size), m_color(color)
 	{
 	
 	}
 
-	void Draw(const Renderer& render)
+	void Draw(Renderer& render)
 	{
-		SDL_Rect rect;
-		rect.x = m_pos.x;
-		rect.y = m_pos.y;
-		rect.w = m_size.x;
-		rect.h = m_size.y;
-		if (SDL_SetRenderDrawColor(render.m_renderer, m_color.r, m_color.g, m_color.b, 0xFF) < 0)
-			throw std::runtime_error(std::string("Couldn't set render draw color: ") + SDL_GetError());
-
-		if (SDL_RenderFillRect(render.m_renderer, &rect) < 0)
-			throw std::runtime_error(std::string("Couldn't fill rect render: ") + SDL_GetError());
+		struct Vertex {
+			Vec2f pos;
+			Color color;
+		} verts[4] = {
+			{
+				{m_pos.x - m_size.x, m_pos.y - m_size.y},
+				m_color
+			},
+			{
+				{m_pos.x + m_size.x, m_pos.y - m_size.y},
+				m_color.r, m_color.g, m_color.b 
+			},
+			{
+				{m_pos.x + m_size.x, m_pos.y + m_size.y},
+				m_color
+			},
+			{
+				{m_pos.x - m_size.x, m_pos.y + m_size.y},
+				m_color
+			},
+		};
+		render.PushVerts(static_cast<const void*>(verts), 4);
 	}
 
 	void Update()
@@ -186,30 +318,30 @@ public:
 		m_pos.y += m_vel.y;
 	}
 
-	Vec2i GetPos()
+	Vec2f GetPos()
 	{
 		return m_pos;
 	}
 
-	void SetPos(const Vec2i newPos)
+	void SetPos(const Vec2f newPos)
 	{
 		m_pos = newPos;
 	}
 
-	Vec2i GetVel()
+	Vec2f GetVel()
 	{
 		return m_vel;
 	}
 
-	void SetVel(const Vec2i newVel)
+	void SetVel(const Vec2f newVel)
 	{
 		m_vel = newVel;
 	}
 
 private:
-	Vec2i m_vel;
-	Vec2i m_pos;
-	Vec2i m_size;
+	Vec2f m_vel;
+	Vec2f m_pos;
+	Vec2f m_size;
 	Color m_color;
 };
 
@@ -217,44 +349,37 @@ private:
 class RandomRectangleFactory {
 public:
 	RandomRectangleFactory() :
-		m_distPosX((WIN_WIDTH/2) - 10, (WIN_WIDTH/2) + 10),
-		m_distPosY((WIN_HEIGHT/2) - 10, (WIN_HEIGHT/2) + 10),
-		m_distVel(-6, 6),
-		m_distColor(0x0F, 0xFF),
-		m_distSize(1, 3)
+		m_gen(m_rd()),
+		m_distPosX(-0.00005, 0.00005),
+		m_distPosY(-0.00005, 0.00005),
+		m_distVel(-0.0015, 0.0015),
+		m_distColor(0.1, 1.0),
+		m_distSize(0.0009, 0.0022)
 	{
 
 	}
 
 	Rectangle Make()
 	{
-		const int size = m_distSize(m_gen);
-		
-		int velX = 0;
-		int velY = 0;
-
-		while (!velX || !velY) {
-			velX = m_distVel(m_gen);
-			velY = m_distVel(m_gen);
-		}
-
+		const GLfloat size = m_distSize(m_gen);
 		return Rectangle(
-				Vec2i{velX, velY},
-				Vec2i{m_distPosX(m_gen), m_distPosY(m_gen)},
-				Vec2i{size, size},
-				Color{static_cast<Uint8>(m_distColor(m_gen)),
-                      static_cast<Uint8>(m_distColor(m_gen)),
-                      static_cast<Uint8>(m_distColor(m_gen))}
+				Vec2f{m_distVel(m_gen), m_distVel(m_gen)},
+				Vec2f{m_distPosX(m_gen), m_distPosY(m_gen)},
+				Vec2f{size, size},
+				Color{m_distColor(m_gen),
+					  m_distColor(m_gen),
+					  m_distColor(m_gen)}
 		);
 	}
 
 private:
+	std::random_device m_rd;
 	std::mt19937 m_gen;
-	std::uniform_int_distribution<int> m_distPosX;
-	std::uniform_int_distribution<int> m_distPosY;
-	std::uniform_int_distribution<int> m_distVel;
-	std::uniform_int_distribution<int> m_distColor;
-	std::uniform_int_distribution<int> m_distSize;
+	std::uniform_real_distribution<GLfloat> m_distPosX;
+	std::uniform_real_distribution<GLfloat> m_distPosY;
+	std::uniform_real_distribution<GLfloat> m_distVel;
+	std::uniform_real_distribution<GLfloat> m_distColor;
+	std::uniform_real_distribution<GLfloat> m_distSize;
 };
 
 
@@ -272,11 +397,11 @@ int main(int, char**)
 			game->BeginFrame({0x00, 0x00, 0x00});
 			
 			for (auto& rect : rects) {
-				const Vec2i pos = rect.GetPos();
-				Vec2i vel = rect.GetVel();
-				if ((pos.x >= WIN_WIDTH && vel.x > 0) || (pos.x <= 0 && vel.x < 0))
+				const Vec2f pos = rect.GetPos();
+				Vec2f vel = rect.GetVel();
+				if ((pos.x < -1 && vel.x < 0) || (pos.x > 1 && vel.x > 0))
 					vel.x = -vel.x;
-				if ((pos.y >= WIN_HEIGHT && vel.y > 0) || (pos.y <= 0 && vel.y < 0))
+				if ((pos.y < -1 && vel.y < 0) || (pos.y > 1 && vel.y > 0))
 					vel.y = -vel.y;
 
 				rect.SetVel(vel);
