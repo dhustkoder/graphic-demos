@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+#include <stdint.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 #ifdef __linux__
