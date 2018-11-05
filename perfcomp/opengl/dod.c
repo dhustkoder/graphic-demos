@@ -5,8 +5,10 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
+#ifdef __linux__
 #include <pcg_variants.h>
 #include <entropy.h>
+#endif
 
 #define WIN_WIDTH     (1920)
 #define WIN_HEIGHT    (1080)
@@ -38,17 +40,27 @@ static SDL_GLContext glcontext = NULL;
 static GLuint vao = 0, vbo = 0;
 static GLuint sp_id = 0, vs_id = 0, fs_id = 0;
 
+#ifdef __linux__
 static pcg64_random_t pcg_rnd;
-
+#endif
 
 static GLfloat randnum(double min, double max)
 {
-    double range = (max - min); 
-    double div = INT64_MAX / range;
-    double result = min + (pcg64_random_r(&pcg_rnd) / div);
-    while (result < min || result > max)
-	    result = min + (pcg64_random_r(&pcg_rnd) / div);
-    return result;
+	#ifdef __linux__
+	#define GET_RAND_NUM() pcg64_random_r(&pcg_rnd)
+	#else
+	#define GET_RAND_NUM() ((rand()<<32)|(rand()))
+	#endif
+
+	double range = (max - min); 
+	double div = INT64_MAX / range;
+	double result = min + (GET_RAND_NUM() / div);
+	while (result < min || result > max)
+		result = min + (GET_RAND_NUM() / div);
+	return result;
+
+
+	#undef GET_RAND_NUM
 }
 
 static void terminate_system(void)
@@ -132,14 +144,12 @@ static bool initialize_system(void)
 		return false;
 	}
 
-
 	GLenum err;
 	if ((err = glewInit()) != GLEW_OK) {
 		fprintf(stderr, "GLEW Error: %s\n", glewGetErrorString(err));
 		terminate_system();
 		return false;
 	}
-
 
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
@@ -211,9 +221,13 @@ static bool initialize_system(void)
 	                      sizeof(GLfloat) * 5,
 	                      (void*)(sizeof(GLfloat) * 2));
 
+#ifdef __linux__
 	pcg128_t seeds[2];
 	entropy_getbytes(seeds, sizeof(seeds));
 	pcg64_srandom_r(&pcg_rnd, seeds[0], seeds[1]);
+#else
+	srand(time(NULL));
+#endif
 	return true;
 }
 
@@ -292,9 +306,7 @@ int main(int argc, char** argv)
 		glClearColor(0x00, 0x00, 0x00, 0xFF);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-
 		for (long i = 0; i < nrects; ++i) {
-
 			if (poss[i].x < -1.0 || poss[i].x > 1.0)
 				vels[i].x = -vels[i].x;
 			if (poss[i].y < -1.0 || poss[i].y > 1.0)
@@ -333,10 +345,12 @@ int main(int argc, char** argv)
 				glDrawArrays(GL_QUADS, 0, max_rects_per_pack * 4);
 			}
 			const long remaining = nrects - (packs * max_rects_per_pack);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 4 * remaining, &vertexs[packs * max_rects_per_pack * 4]);
+			glBufferSubData(GL_ARRAY_BUFFER, 0,
+			                sizeof(struct vertex) * 4 * remaining,
+			                &vertexs[packs * max_rects_per_pack * 4]);
 			glDrawArrays(GL_QUADS, 0, remaining * 4);
-			
 		}
+
 		SDL_GL_SwapWindow(window);
 
 		const Uint32 end_ticks = SDL_GetTicks();
