@@ -197,6 +197,8 @@ static bool initialize_system(void)
 	                      sizeof(GLfloat) * 5,
 	                      (void*)(sizeof(GLfloat) * 2));
 
+	SDL_GL_SetSwapInterval(0);
+	init_random_engine();
 	return true;
 }
 
@@ -215,17 +217,30 @@ static void push_rect(void)
 {
 	if (nrects >= MAX_RECTS)
 		return;
-	
-	const GLfloat posx = randlf(-0.00005, 0.00005);
-	const GLfloat posy = randlf(-0.00005, 0.00005);
-	const GLfloat velx = randlf(-0.0015, 0.0015);
-	const GLfloat vely = randlf(-0.0015, 0.0015);
-	const GLfloat r = randlf(0.1, randlf(0.1, 1));
-	const GLfloat g = randlf(0.1, randlf(0.1, 1));
-	const GLfloat b = randlf(0.1, randlf(0.1, 1));
-	const GLfloat size = randlf(0.0009, 0.0018);
-	//printf("POSX: %f\nPOSY: %f\nVELX: %f\nVELY: %f\nSIZE: %f\nR: %f\nG: %f\nB: %f\n\n",
-	//      posx, posy, velx, vely, size, r, g, b);
+
+	static const double intervals[] = {
+		-0.00005, 0.00005, // posx
+		-0.00005, 0.00005, // posy
+		-0.0015, 0.0015,   // velx
+		-0.0015, 0.0015,   // vely
+		-0.1, 1.0,         // r
+		-0.1, 1.0,         // g
+		-0.1, 1.0,         // b
+		0.0009, 0.0022     // size
+	};
+
+	static double result[(sizeof(intervals) / sizeof(double)) / 2];
+
+	randlf_arr(&intervals[0], &result[0], sizeof(result) / sizeof(double));
+
+	const GLfloat posx = result[0];
+	const GLfloat posy = result[1];
+	const GLfloat velx = result[2];
+	const GLfloat vely = result[3];
+	const GLfloat r = result[4];
+	const GLfloat g = result[5];
+	const GLfloat b = result[6];
+	const GLfloat size = result[7];
 
 	poss[nrects].x = posx;
 	poss[nrects].y = posy;
@@ -266,8 +281,6 @@ int main(int argc, char** argv)
 {
 	if (!initialize_system())
 		return EXIT_FAILURE;
-
-	SDL_GL_SetSwapInterval(0);
 
 	while (handle_events()) {
 		const Uint32 start_ticks = SDL_GetTicks();

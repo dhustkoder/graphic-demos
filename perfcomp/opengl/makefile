@@ -1,14 +1,17 @@
 CC=gcc
 CXX=g++
 
-all: oop dod
+all: rand.o oop dod
 
 oop: oop.cpp
 	$(CXX) $< -O3 -Wall -Wextra -ffast-math -o oop -lSDL2
 
-dod: dod.c
-	$(CXX) $^ -O3 -Wall -Wextra -ffast-math -I../../externals/pcg-c/include -I../../externals/pcg-c/extras -o dod -lSDL2 -lGLEW -lGL -lm ../../externals/pcg-c/extras/entropy.o ../../externals/pcg-c/src/libpcg_random.a rand.o 
+dod: rand.o dod.c
+	$(CXX) $^ -O3 -Wall -Wextra -ffast-math -fno-exceptions -o dod -lSDL2 -lGLEW -lGL -lm
+
+rand.o: rand.cpp
+	$(CXX) -c $^ -O3 -Wall -Wextra -ffast-math
 
 clean:
-	rm -rf oop dod
+	rm -rf oop dod rand.o
 
