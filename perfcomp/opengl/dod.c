@@ -8,8 +8,8 @@
 #include <GL/glew.h>
 #include "rand.h"
 
-#define WIN_WIDTH  (1280)
-#define WIN_HEIGHT (720)
+#define WIN_WIDTH     (1280)
+#define WIN_HEIGHT    (720)
 #define MAX_VBO_BYTES (1024 * 1024) // 1G de VRAM 
 #define MAX_RECTS     (500000)
 
@@ -192,9 +192,9 @@ static bool initialize_system(void)
 	glEnableVertexAttribArray(pos_attrib);
 	glEnableVertexAttribArray(rgb_attrib);
 	glVertexAttribPointer(pos_attrib, 2, GL_FLOAT, GL_TRUE,
-	                      sizeof(GLfloat) * 5, NULL);
+	                      sizeof(struct vertex), NULL);
 	glVertexAttribPointer(rgb_attrib, 3, GL_FLOAT, GL_FALSE,
-	                      sizeof(GLfloat) * 5,
+	                      sizeof(struct vertex),
 	                      (void*)(sizeof(GLfloat) * 2));
 
 	SDL_GL_SetSwapInterval(0);
