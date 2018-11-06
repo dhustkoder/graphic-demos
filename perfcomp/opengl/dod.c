@@ -9,8 +9,9 @@
 
 #define WIN_WIDTH     (1280)
 #define WIN_HEIGHT    (720)
-#define MAX_VBO_BYTES (1024 * 1024) // 1G de VRAM 
-#define MAX_RECTS     (500000)
+#define MAX_VBO_BYTES (1024 * 1024) // 1G de VRAM
+#define RECT_SIZE     ((long)(sizeof(struct vertex) * 4))
+#define MAX_RECTS     (MAX_VBO_BYTES / RECT_SIZE)
 
 struct color {
 	GLfloat r, g, b;
@@ -38,19 +39,19 @@ static GLuint vao = 0, vbo = 0;
 static GLuint sp_id = 0, vs_id = 0, fs_id = 0;
 
 
-static float randlf(float min, float max)
+static GLfloat randf(GLfloat min, GLfloat max)
 {
-	float retval;
+	GLfloat retval;
 	do {
 		retval = 1.0f*rand()/RAND_MAX*(max -  min) + min;
 	} while (!(retval > min && retval < max));
 	return retval;
 }
 
-static void randlf_arr(const float* const intervals, float* const result, const int count)
+static void randf_arr(const GLfloat* const intervals, GLfloat* const result, const int count)
 {
 	for (int i = 0; i < count; ++i)
-		result[i] = randlf(intervals[i * 2], intervals[i * 2 + 1]);
+		result[i] = randf(intervals[i * 2], intervals[i * 2 + 1]);
 }
 
 static void init_random_engine(void)
@@ -238,7 +239,7 @@ static void push_rect(void)
 	if (nrects >= MAX_RECTS)
 		return;
 
-	static const float intervals[] = {
+	static const GLfloat intervals[] = {
 		-0.00005, 0.00005, // posx
 		-0.00005, 0.00005, // posy
 		-0.0015, 0.0015,   // velx
@@ -249,9 +250,9 @@ static void push_rect(void)
 		0.0009, 0.0022     // size
 	};
 
-	static float result[(sizeof(intervals) / sizeof(float)) / 2];
+	static GLfloat result[(sizeof(intervals) / sizeof(GLfloat)) / 2];
 
-	randlf_arr(&intervals[0], &result[0], sizeof(result) / sizeof(float));
+	randf_arr(&intervals[0], &result[0], sizeof(result) / sizeof(GLfloat));
 
 	const GLfloat posx = result[0];
 	const GLfloat posy = result[1];
@@ -299,6 +300,9 @@ static void push_rect(void)
 
 int main(int argc, char** argv)
 {
+	((void)argc);
+	((void)argv);
+
 	if (!initialize_system())
 		return EXIT_FAILURE;
 
@@ -333,22 +337,22 @@ int main(int argc, char** argv)
 			vertexs[i * 4 + 3].pos.y = posy + sizes[i];
 		}
 
-		const long max_rects_per_pack = MAX_VBO_BYTES / (sizeof(struct vertex) * 4);
+		const long max_rects_per_pack = MAX_VBO_BYTES / (RECT_SIZE);
 
 		if (nrects < max_rects_per_pack) {
-			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(struct vertex) * 4 * nrects, vertexs);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, RECT_SIZE * nrects, vertexs);
 			glDrawArrays(GL_QUADS, 0, nrects * 4);
 		} else {
 			const long packs = nrects / max_rects_per_pack;
 			for (long i = 0; i < packs; ++i) {
 				glBufferSubData(GL_ARRAY_BUFFER, 0,
-				                sizeof(struct vertex) * 4 * max_rects_per_pack,
+				                RECT_SIZE * max_rects_per_pack,
 				                &vertexs[i * 4 * max_rects_per_pack]);
 				glDrawArrays(GL_QUADS, 0, max_rects_per_pack * 4);
 			}
 			const long remaining = nrects - (packs * max_rects_per_pack);
 			glBufferSubData(GL_ARRAY_BUFFER, 0,
-			                sizeof(struct vertex) * 4 * remaining,
+			                RECT_SIZE * remaining,
 			                &vertexs[packs * max_rects_per_pack * 4]);
 			glDrawArrays(GL_QUADS, 0, remaining * 4);
 		}
