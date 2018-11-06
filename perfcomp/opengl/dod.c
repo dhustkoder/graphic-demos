@@ -9,9 +9,9 @@
 
 #define WIN_WIDTH     (1280)
 #define WIN_HEIGHT    (720)
-#define MAX_VBO_BYTES (1024 * 1024) // 1G de VRAM
-#define RECT_SIZE     ((long)(sizeof(struct vertex) * 4))
-#define MAX_RECTS     (MAX_VBO_BYTES / RECT_SIZE)
+#define MAX_VBO_BYTES (1024ll * 1024ll * 8ll) // 8M de VRAM
+#define RECT_SIZE     ((long)(sizeof(struct vertex) * 4ll))
+#define MAX_RECTS     (1000000)
 
 struct color {
 	GLfloat r, g, b;
@@ -31,7 +31,7 @@ static struct vertex vertexs[MAX_RECTS * 4];
 static struct vec2f vels[MAX_RECTS];
 static struct vec2f poss[MAX_RECTS];
 static GLfloat sizes[MAX_RECTS];
-static long nrects = 0;
+static long long nrects = 0;
 
 static SDL_Window* window = NULL;
 static SDL_GLContext glcontext = NULL;
@@ -236,8 +236,10 @@ static bool handle_events(void)
 
 static void push_rect(void)
 {
-	if (nrects >= MAX_RECTS)
+	if (nrects >= MAX_RECTS) {
+		printf("MAX RECTS LIMIT\n");
 		return;
+	}
 
 	static const GLfloat intervals[] = {
 		-0.00005, 0.00005, // posx
@@ -312,7 +314,7 @@ int main(int argc, char** argv)
 		glClearColor(0x00, 0x00, 0x00, 0xFF);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		for (long i = 0; i < nrects; ++i) {
+		for (long long i = 0; i < nrects; ++i) {
 			if (poss[i].x < -1.0 || poss[i].x > 1.0)
 				vels[i].x = -vels[i].x;
 			if (poss[i].y < -1.0 || poss[i].y > 1.0)
@@ -337,20 +339,20 @@ int main(int argc, char** argv)
 			vertexs[i * 4 + 3].pos.y = posy + sizes[i];
 		}
 
-		const long max_rects_per_pack = MAX_VBO_BYTES / (RECT_SIZE);
+		const long long max_rects_per_pack = MAX_VBO_BYTES / (RECT_SIZE);
 
 		if (nrects < max_rects_per_pack) {
 			glBufferSubData(GL_ARRAY_BUFFER, 0, RECT_SIZE * nrects, vertexs);
 			glDrawArrays(GL_QUADS, 0, nrects * 4);
 		} else {
-			const long packs = nrects / max_rects_per_pack;
-			for (long i = 0; i < packs; ++i) {
+			const long long packs = nrects / max_rects_per_pack;
+			for (long long i = 0; i < packs; ++i) {
 				glBufferSubData(GL_ARRAY_BUFFER, 0,
 				                RECT_SIZE * max_rects_per_pack,
 				                &vertexs[i * 4 * max_rects_per_pack]);
 				glDrawArrays(GL_QUADS, 0, max_rects_per_pack * 4);
 			}
-			const long remaining = nrects - (packs * max_rects_per_pack);
+			const long long remaining = nrects - (packs * max_rects_per_pack);
 			glBufferSubData(GL_ARRAY_BUFFER, 0,
 			                RECT_SIZE * remaining,
 			                &vertexs[packs * max_rects_per_pack * 4]);
@@ -361,7 +363,7 @@ int main(int argc, char** argv)
 
 		const Uint32 end_ticks = SDL_GetTicks();
 		if ((end_ticks - start_ticks) < 16) {
-			for (int i = 0; i < 100; ++i)
+			for (int i = 0; i < 50; ++i)
 				push_rect();
 		}
 
