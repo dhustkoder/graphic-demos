@@ -62,12 +62,6 @@ static void init_random_engine(void)
 
 static void terminate_system(void)
 {
-	if (vbo != 0)
-		glDeleteBuffers(1, &vbo);
-
-	if (vao != 0)
-		glDeleteVertexArrays(1, &vao);
-
 	if (fs_id != 0) {
 		glDetachShader(sp_id, fs_id);
 		glDeleteShader(fs_id);
@@ -80,6 +74,12 @@ static void terminate_system(void)
 
 	if (sp_id != 0)
 		glDeleteProgram(sp_id);
+	
+	if (vbo != 0)
+		glDeleteBuffers(1, &vbo);
+
+	if (vao != 0)
+		glDeleteVertexArrays(1, &vao);
 
 	if (glcontext != NULL)
 		SDL_GL_DeleteContext(glcontext);
