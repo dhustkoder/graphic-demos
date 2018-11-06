@@ -193,7 +193,7 @@ static bool initialize_system(void)
 	glEnableVertexAttribArray(rgb_attrib);
 	glVertexAttribPointer(pos_attrib, 2, GL_FLOAT, GL_TRUE,
 	                      sizeof(struct vertex), NULL);
-	glVertexAttribPointer(rgb_attrib, 3, GL_FLOAT, GL_FALSE,
+	glVertexAttribPointer(rgb_attrib, 3, GL_FLOAT, GL_TRUE,
 	                      sizeof(struct vertex),
 	                      (void*)(sizeof(GLfloat) * 2));
 

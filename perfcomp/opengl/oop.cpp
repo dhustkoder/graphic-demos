@@ -65,99 +65,60 @@ protected:
 };
 
 
-class Shader {
+class ShaderProgram {
 public:
-	enum class Type
+	ShaderProgram(const GLchar* vs_src, const GLchar* fs_src)
 	{
-		Vertex,
-		Fragment
-	};
+		m_sp_id = glCreateProgram();
+		m_vs_id = glCreateShader(GL_VERTEX_SHADER);
+		if (m_vs_id == 0)
+			throw std::string("Couldn't create Vertex Shader");
+		m_fs_id = glCreateShader(GL_FRAGMENT_SHADER);
+		if (m_fs_id == 0) 
+			throw std::string("Couldn't create Fragment Shader");
 
-	Shader(Type type, const GLchar* source) :
-		m_type(type)
-	{
-		if (s_sp_id == 0) {
-			s_sp_id = glCreateProgram();
-			if (s_sp_id == 0)
-				throw std::string("Couldn't create GL Program");
-		}
+		const auto compile = [](GLuint id, const GLchar* src) {
+			// compile shader
+			glShaderSource(id, 1, &src, NULL);
+			glCompileShader(id);
+			
+			GLint shader_success;
 
-		if (m_type == Type::Vertex) {
-			m_id = glCreateShader(GL_VERTEX_SHADER);
-			if (m_id == 0)
-				throw std::string("Couldn't create Vertex Shader");
-		} else if (m_type == Type::Fragment) {
-			m_id = glCreateShader(GL_FRAGMENT_SHADER);
-			if (m_id == 0) 
-				throw std::string("Couldn't create Fragment Shader");
-		}
+			glGetShaderiv(id, GL_COMPILE_STATUS, &shader_success);
+			if (shader_success == GL_FALSE)
+				throw std::string("Couldn't compile Shader\n");
+		};
 
-		// compile shader
-		glShaderSource(m_id, 1, &source, NULL);
-		glCompileShader(m_id);
-		
-		GLint shader_success;
-
-		glGetShaderiv(m_id, GL_COMPILE_STATUS, &shader_success);
-		if (shader_success == GL_FALSE)
-			throw std::string("Couldn't compile Shader\n");
+		compile(m_vs_id, vs_src);
+		compile(m_fs_id, fs_src);
+		glAttachShader(m_sp_id, m_fs_id);
+		glAttachShader(m_sp_id, m_vs_id);
+		glLinkProgram(m_sp_id);
+		glUseProgram(m_sp_id);
 	}
 
-	~Shader() 
+	~ShaderProgram() 
 	{
-		if (m_attached) {
-			this->Detach();
-			glDeleteShader(m_id);
-		}
-
-		if (s_shaders_attached == 0 && s_sp_id != 0) {
-			glDeleteProgram(s_sp_id);
-			s_sp_id = 0;
-		}
+		glDetachShader(m_sp_id, m_fs_id);
+		glDetachShader(m_sp_id, m_vs_id);
+		glDeleteProgram(m_sp_id);
 	}
 
-	void Attach()
-	{
-		glAttachShader(s_sp_id, m_id);
-		m_attached = true;
-		++s_shaders_attached;
-	}
-
-	void Detach()
-	{
-		glDetachShader(s_sp_id, m_id);
-		m_attached = false;
-		--s_shaders_attached;
-	}
-
-	static void VertexAttribPointer(const char* attstr,
+	void VertexAttribPointer(const char* attstr,
 	                         GLint size,
 	                         GLenum type,
 	                         GLsizei stride,
 	                         const GLvoid* pointer)
 	{
-		const GLint index = glGetAttribLocation(s_sp_id, attstr);
+		const GLint index = glGetAttribLocation(m_sp_id, attstr);
 		glEnableVertexAttribArray(index);
 		glVertexAttribPointer(index, size, type, GL_TRUE, stride, pointer);
 	}
 
-	static void LinkAndUse()
-	{
-		glLinkProgram(s_sp_id);
-		glUseProgram(s_sp_id);
-	}
-
-
 private:
-	Type m_type;
-	GLuint m_id = 0;
-	bool m_attached = false;
-	static GLuint s_sp_id;
-	static long s_shaders_attached;
+	GLuint m_vs_id = 0, m_fs_id = 0;
+	GLuint m_sp_id;
 };
-
-GLuint Shader::s_sp_id = 0;
-long Shader::s_shaders_attached = 0;
 
 
 
@@ -186,18 +147,32 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, MAX_VBO_BYTES,
 		             NULL, GL_DYNAMIC_DRAW);
 
-		m_vertex_shader = std::make_unique<Shader>(Shader::Type::Vertex, vs_src);
-		m_frag_shader = std::make_unique<Shader>(Shader::Type::Fragment, fs_src);
-		m_vertex_shader->Attach();
-		m_frag_shader->Attach();
-		Shader::LinkAndUse();
+		const GLchar* const vs_src =
+		"#version 130\n"
+		"in vec2 pos;\n"
+		"in vec3 rgb;\n"
+		"out vec4 frag_color;\n"
+		"void main()\n"
+		"{\n"
+		"	gl_Position = vec4(pos, 0.0, 1.0);\n"
+		"	frag_color = vec4(rgb, 1.0);\n"
+		"}\n";
 
-		Shader::VertexAttribPointer("pos", 2, GL_FLOAT,
+		const GLchar* const fs_src =
+		"#version 130\n"
+		"in vec4 frag_color;\n"
+		"out vec4 outcolor;\n"
+		"void main()\n"
+		"{\n"
+		"	outcolor = frag_color;\n"
+		"}\n";
+
+		m_shader = std::make_unique<ShaderProgram>(vs_src, fs_src);
+		m_shader->VertexAttribPointer("pos", 2, GL_FLOAT,
 		                             sizeof(GLfloat) * 5, NULL);
-		Shader::VertexAttribPointer("rgb", 3, GL_FLOAT,
+		m_shader->VertexAttribPointer("rgb", 3, GL_FLOAT,
 		                             sizeof(GLfloat) * 5,
 		                             (void*)(sizeof(GLfloat) * 2));
-
 		SDL_GL_SetSwapInterval(0);
 	}
 
@@ -246,28 +221,7 @@ protected:
 	SDL_GLContext m_glcontext = NULL;
 	GLuint m_vao = 0, m_vbo = 0;
 	long m_verts_pushed = 0;
-	std::unique_ptr<Shader> m_vertex_shader;
-	std::unique_ptr<Shader> m_frag_shader;
-
-	const GLchar* const vs_src =
-	"#version 130\n"
-	"in vec2 pos;\n"
-	"in vec3 rgb;\n"
-	"out vec4 frag_color;\n"
-	"void main()\n"
-	"{\n"
-	"	gl_Position = vec4(pos, 0.0, 1.0);\n"
-	"	frag_color = vec4(rgb, 1.0);\n"
-	"}\n";
-
-	const GLchar* const fs_src =
-	"#version 130\n"
-	"in vec4 frag_color;\n"
-	"out vec4 outcolor;\n"
-	"void main()\n"
-	"{\n"
-	"	outcolor = frag_color;\n"
-	"}\n";
+	std::unique_ptr<ShaderProgram> m_shader;
 };
 
 
