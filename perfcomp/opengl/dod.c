@@ -367,7 +367,7 @@ int main(int argc, char** argv)
 				push_rect();
 		}
 
-		printf("RECTS: %ld\n", nrects);
+		printf("RECTS: %lld\n", nrects);
 		printf("FRAMES PER SECOND: %.2lf\n", 1000.0 / (end_ticks - start_ticks));
 	}
 
