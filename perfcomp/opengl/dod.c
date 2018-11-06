@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
-#include "rand.h"
 
 #define WIN_WIDTH     (1280)
 #define WIN_HEIGHT    (720)
@@ -37,6 +36,27 @@ static SDL_Window* window = NULL;
 static SDL_GLContext glcontext = NULL;
 static GLuint vao = 0, vbo = 0;
 static GLuint sp_id = 0, vs_id = 0, fs_id = 0;
+
+
+static float randlf(float min, float max)
+{
+	float retval;
+	do {
+		retval = 1.0f*rand()/RAND_MAX*(max -  min) + min;
+	} while (!(retval > min && retval < max));
+	return retval;
+}
+
+static void randlf_arr(const float* const intervals, float* const result, const int count)
+{
+	for (int i = 0; i < count; ++i)
+		result[i] = randlf(intervals[i * 2], intervals[i * 2 + 1]);
+}
+
+static void init_random_engine(void)
+{
+	srand(time(NULL));
+}
 
 
 static void terminate_system(void)
