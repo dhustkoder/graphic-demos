@@ -2,8 +2,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-double randlf(double min, double max);
-void randlf_arr(const double* intervals, double* result, int count);
+float randlf(float min, float max);
+void randlf_arr(const float* intervals, float* result, int count);
 void init_random_engine(void);
 #ifdef __cplusplus
 }

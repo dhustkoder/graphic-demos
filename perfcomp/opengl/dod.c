@@ -218,7 +218,7 @@ static void push_rect(void)
 	if (nrects >= MAX_RECTS)
 		return;
 
-	static const double intervals[] = {
+	static const float intervals[] = {
 		-0.00005, 0.00005, // posx
 		-0.00005, 0.00005, // posy
 		-0.0015, 0.0015,   // velx
@@ -229,9 +229,9 @@ static void push_rect(void)
 		0.0009, 0.0022     // size
 	};
 
-	static double result[(sizeof(intervals) / sizeof(double)) / 2];
+	static float result[(sizeof(intervals) / sizeof(float)) / 2];
 
-	randlf_arr(&intervals[0], &result[0], sizeof(result) / sizeof(double));
+	randlf_arr(&intervals[0], &result[0], sizeof(result) / sizeof(float));
 
 	const GLfloat posx = result[0];
 	const GLfloat posy = result[1];

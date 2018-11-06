@@ -1,17 +1,14 @@
 CC=gcc
 CXX=g++
 
-all: rand.o oop dod
+all: oop dod
 
 oop: oop.cpp
 	$(CXX) $< -O3 -Wall -Wextra -ffast-math -o oop -lSDL2 -lGLEW -lGL -lm
 
-dod: rand.o dod.c
-	$(CXX) $^ -O3 -Wall -Wextra -ffast-math -fno-exceptions -o dod -lSDL2 -lGLEW -lGL -lm
-
-rand.o: rand.cpp
-	$(CXX) -c $^ -O3 -Wall -Wextra -ffast-math
+dod: rand.c dod.c
+	$(CC) $^ -flto -O3 -Wall -Wextra -ffast-math -fno-exceptions -o dod -lSDL2 -lGLEW -lGL -lm
 
 clean:
-	rm -rf oop dod rand.o
+	rm -rf oop dod *.o
 
