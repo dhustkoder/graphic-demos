@@ -11,7 +11,7 @@
 #define WIN_HEIGHT    (720)
 #define MAX_VBO_BYTES (1024ll * 1024ll * 8ll) // 8M de VRAM
 #define RECT_SIZE     ((long)(sizeof(struct vertex) * 4ll))
-#define MAX_RECTS     (1000000)
+#define MAX_RECTS     (1000000ll)
 
 struct color {
 	GLfloat r, g, b;
