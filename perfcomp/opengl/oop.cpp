@@ -12,7 +12,7 @@
 
 #define WIN_WIDTH  (1280)
 #define WIN_HEIGHT (720)
-#define MAX_VBO_BYTES (1024 * 1024) // 1G de VRAM 
+#define MAX_VBO_BYTES (1024ll * 1024ll * 8ll) // 8M de VRAM 
 
 struct Color {
 	GLfloat r, g, b;
