@@ -32,7 +32,7 @@ struct vertex_data {
 
 int main(void)
 {
-	if (!sdl2_opengl_init("ROTATE", 800, 600, vs_src, fs_src)) {
+	if (!sdl2_opengl_init("TRIANGLE", 800, 600, vs_src, fs_src)) {
 		return EXIT_FAILURE;
 	}
 

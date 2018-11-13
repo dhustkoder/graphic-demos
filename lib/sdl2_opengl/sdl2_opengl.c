@@ -118,6 +118,10 @@ bool sdl2_opengl_init(const char* const winname,
 	glLinkProgram(sp_id);
 	glUseProgram(sp_id);
 
+	printf("SDL2 OPENG INITIALIZED!\n"
+	       "W: set wireframe\n"
+		   "D: set depth bit\n");
+
 	return true;
 }
 
@@ -155,9 +159,28 @@ void sdl2_opengl_term(void)
 bool sdl2_opengl_handle_events(void)
 {
 	static SDL_Event event;
+	static bool wireframe = false;
+	static bool depth_bit = false;
+
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT)
 			return false;
+
+		if (event.type == SDL_KEYDOWN) {
+			switch (event.key.keysym.scancode) {
+			case SDL_SCANCODE_W:
+				glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+				wireframe = !wireframe;
+				break;
+			case SDL_SCANCODE_D:
+				depth_bit = !depth_bit;
+				if (depth_bit) {
+					glEnable(GL_DEPTH_TEST);
+				} else {
+					glDisable(GL_DEPTH_TEST);
+				}
+			}
+		}
 	}
 	return true;
 }
