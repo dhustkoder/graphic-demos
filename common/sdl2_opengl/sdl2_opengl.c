@@ -187,7 +187,7 @@ bool sdl2_opengl_handle_events(void)
 			}
 
 			if (printcfg) {
-				printf("SDL2 OPENG INITIALIZED!\n"
+				printf("---------------------\n"
 				       "W: set wireframe (%s)\n"
 				       "D: set depth bit (%s)\n",
 				       wireframe ? "true" : "false",
