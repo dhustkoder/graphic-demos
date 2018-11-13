@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <stdint.h>
-#include <sdl2_opengl/sdl2_opengl.h>
+#include <sdl2_opengl.h>
 
 #define WIN_WIDTH     (1280)
 #define WIN_HEIGHT    (720)

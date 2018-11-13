@@ -1,5 +1,6 @@
 #include <cglm/cglm.h>
-#include <sdl2_opengl/sdl2_opengl.h>
+#include <sdl2_opengl.h>
+
 
 
 const GLchar* const vs_src =
@@ -32,7 +33,7 @@ struct vertex_data {
 
 int main(void)
 {
-	if (!sdl2_opengl_init("TRIANGLE", 800, 600, vs_src, fs_src)) {
+	if (!sdl2_opengl_init("ROTATE", 800, 600, vs_src, fs_src)) {
 		return EXIT_FAILURE;
 	}
 
@@ -40,17 +41,17 @@ int main(void)
 	sdl2_opengl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
 	                   (void*)((struct vertex_data*)NULL)->rgb);
 
-	/* define the vertices of our triangle (3 points)
-	 * */
 	struct vertex_data verts[] = {
-		{{-0.5, -0.5, 0}, {1, 0, 0}}, // down left  point
-		{{ 0.5, -0.5, 0}, {0, 1, 0}}, // down right point
-		{{ 0.0,  0.5, 0}, {0, 0, 1}}, // up         point
+		{{-0.5, -0.5, 0}, {1, 0, 0}},
+		{{ 0.5, -0.5, 0}, {0, 1, 0}},
+		{{ 0.0,  0.5, 0}, {0, 0, 1}},
 	};
 
-	/* send to GPU RAM
+	/* Our rotation matrix is set to rotate 1 degree
 	 * */
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+	mat4 rotation_matrix = GLM_MAT4_IDENTITY_INIT;
+	glm_rotate_z(rotation_matrix, glm_rad(1), rotation_matrix);
+
 
 	while (sdl2_opengl_handle_events()) {
 		sdl2_opengl_begin_frame();
@@ -58,8 +59,14 @@ int main(void)
 		glClearColor(0, 0, 0, 0xFF);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		/* Draw the triangle from GPU RAM to Screen
+		/* Rotation is done by applying the 
+		 * transformation to all vertices/vectors of the object
+		 * this will rotate the triangle 1 degree per frame
 		 * */
+		for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i)
+			glm_vec_rotate_m4(rotation_matrix, verts[i].pos, verts[i].pos);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STREAM_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(verts)/sizeof(verts[0]));
 
 		sdl2_opengl_end_frame();
