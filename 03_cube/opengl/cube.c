@@ -32,7 +32,7 @@ struct vertex_data {
 
 int main(void)
 {
-	if (!sdl2_opengl_init("ROTATE", 800, 600, vs_src, fs_src)) {
+	if (!sdl2_opengl_init("CUBE", 800, 600, vs_src, fs_src)) {
 		return EXIT_FAILURE;
 	}
 
@@ -40,30 +40,49 @@ int main(void)
 	sdl2_opengl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
 	                   (void*)((struct vertex_data*)NULL)->rgb);
 
+	
 	struct vertex_data verts[] = {
-		{{ -0.5,  0.5,  0.5  },  {1, 1, 1}},   // Front-top-left
-		{{  0.5,  0.5,  0.5  },  {1, 1, 1}},   // Front-top-right
-		{{ -0.5, -0.5,  0.5  },  {1, 1, 1}},   // Front-bottom-left
-		{{  0.5, -0.5,  0.5  },  {1, 1, 1}},   // Front-bottom-right
-		{{  0.5, -0.5, -0.5  },  {1, 0, 0}},   // Back-bottom-right
-		{{  0.5,  0.5,  0.5  },  {1, 1, 1}},   // Front-top-right
-		{{  0.5,  0.5, -0.5  },  {1, 0, 0}},   // Back-top-right
-		{{ -0.5,  0.5,  0.5  },  {1, 1, 1}},   // Front-top-left
-		{{ -0.5,  0.5, -0.5  },  {1, 0, 0}},   // Back-top-left
-		{{ -0.5, -0.5,  0.5  },  {1, 1, 1}},   // Front-bottom-left
-		{{ -0.5, -0.5, -0.5  },  {1, 0, 0}},   // Back-bottom-left
-		{{  0.5, -0.5, -0.5  },  {1, 0, 0}},   // Back-bottom-right
-		{{ -0.5,  0.5, -0.5  },  {1, 0, 0}},   // Back-top-left
-		{{  0.5,  0.5, -0.5  },   {1, 0, 0}}   // Back-top-right
+		/* FRONT */
+		{{ -0.5, -0.5,  0.5 }, {1, 0, 0}},
+		{{  0.5, -0.5,  0.5 }, {1, 0, 0}},
+		{{  0.5,  0.5,  0.5 }, {1, 0, 0}},
+		{{ -0.5,  0.5,  0.5 }, {1, 0, 0}},
+
+		/* BACK */
+		{{ -0.5, -0.5, -0.5 }, {0, 1, 0}},
+		{{  0.5, -0.5, -0.5 }, {0, 1, 0}},
+		{{  0.5,  0.5, -0.5 }, {0, 1, 0}},
+		{{ -0.5,  0.5, -0.5 }, {0, 1, 0}},
+
+		/* RIGHT */
+		{{  0.5, -0.5,  0.5 }, {0, 0, 1}},
+		{{  0.5, -0.5, -0.5 }, {0, 0, 1}},
+		{{  0.5,  0.5, -0.5 }, {0, 0, 1}},
+		{{  0.5,  0.5,  0.5 }, {0, 0, 1}},
+
+		/* LEFT */
+		{{ -0.5, -0.5,  0.5 }, {1, 0, 1}},
+		{{ -0.5, -0.5, -0.5 }, {1, 0, 1}},
+		{{ -0.5,  0.5, -0.5 }, {1, 0, 1}},
+		{{ -0.5,  0.5,  0.5 }, {1, 0, 1}},
+
+		/* UP */
+		{{ -0.5,  0.5,  0.5 }, {1, 1, 1}},
+		{{  0.5,  0.5,  0.5 }, {1, 1, 1}},
+		{{  0.5,  0.5, -0.5 }, {1, 1, 1}},
+		{{ -0.5,  0.5, -0.5 }, {1, 1, 1}},
+
+		/* DOWN */
+		{{ -0.5, -0.5,  0.5 }, {0, 1, 1}},
+		{{  0.5, -0.5,  0.5 }, {0, 1, 1}},
+		{{  0.5, -0.5, -0.5 }, {0, 1, 1}},
+		{{ -0.5, -0.5, -0.5 }, {0, 1, 1}},
 	};
 
 	/* Our rotation matrix is set to rotate 1 degree
 	 * */
 	mat4 rotation_matrix = GLM_MAT4_IDENTITY_INIT;
-	glm_rotate_x(rotation_matrix, glm_rad(1), rotation_matrix);
-	glm_rotate_y(rotation_matrix, glm_rad(1), rotation_matrix);
-	glm_rotate_z(rotation_matrix, glm_rad(1), rotation_matrix);
-
+	glm_rotate(rotation_matrix, glm_rad(-1), (vec3){0.5, 1, 0});
 
 
 	while (sdl2_opengl_handle_events()) {
@@ -76,12 +95,11 @@ int main(void)
 		 * transformation to all vertices/vectors of the object
 		 * this will rotate the triangle 1 degree per frame
 		 * */
-		for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i) {
+		for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i)
 			glm_vec_rotate_m4(rotation_matrix, verts[i].pos, verts[i].pos);
-		}
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STREAM_DRAW);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(verts)/sizeof(verts[0]));
+		glDrawArrays(GL_QUADS, 0, sizeof(verts)/sizeof(verts[0]));
 
 		sdl2_opengl_end_frame();
 	}
