@@ -27,4 +27,6 @@ extern void sdl2_opengl_vattrp(const GLchar* attrib_name,
                                GLsizei stride,
                                const GLvoid* pointer);
 
+extern void sdl2_opengl_set_uniform(const GLchar* name, const void* data);
+
 #endif

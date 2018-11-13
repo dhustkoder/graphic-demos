@@ -187,3 +187,16 @@ void sdl2_opengl_vattrp(const GLchar* const attrib_name,
 	glVertexAttribPointer(index, size, type, normalized, stride, pointer);
 }
 
+
+void sdl2_opengl_set_uniform(const GLchar* const name, const void* const data)
+{
+	static const GLchar* lastname_addr;
+	static GLint index;
+	
+	if (lastname_addr != name) {
+		index = glGetUniformLocation(sp_id, "trans");
+		lastname_addr = name;
+	}
+
+	glUniformMatrix4fv(index, 1, GL_FALSE, data);
+}
