@@ -4,9 +4,9 @@ INCLUDE_DIRS=-I../../lib
 INCLUDE_LIBS=-L../../external/cglm/.libs/
 LIBS= -lcglm -lSDL2 -lGLEW -lGL
 
-cube: cube.c ../../lib/sdl2_opengl/sdl2_opengl.c
+rotate: rotate.c ../../lib/sdl2_opengl/sdl2_opengl.c
 	$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(INCLUDE_LIBS) $^ $(LIBS) -o $@
 
 
 clean:
-	rm -rf cube
+	rm -rf rotate
