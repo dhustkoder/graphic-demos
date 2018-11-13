@@ -75,7 +75,7 @@ int main(void)
 	/* Our rotation matrix is set to rotate 1 degree
 	 * */
 	mat4 rotation_matrix = GLM_MAT4_IDENTITY_INIT;
-	glm_rotate(rotation_matrix, glm_rad(3), (vec3){0.3, 0.8, 0.0});
+	glm_rotate(rotation_matrix, glm_rad(-1), (vec3){0.01, 0.1, 0.01});
 
 
 	while (sdl2_opengl_handle_events()) {
