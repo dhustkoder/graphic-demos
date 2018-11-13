@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-std=c11 -O3 -flto
-INCLUDE_DIRS=-I../../lib
+INCLUDE_DIRS=-I../../lib -I../../external/cglm/include
 INCLUDE_LIBS=-L../../external/cglm/.libs/
 LIBS= -lcglm -lSDL2 -lGLEW -lGL
 
