@@ -162,31 +162,37 @@ bool sdl2_opengl_handle_events(void)
 	static bool wireframe = false;
 	static bool depth_bit = false;
 
+
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT)
 			return false;
 
 		if (event.type == SDL_KEYDOWN) {
+			bool printcfg = false;
+			
 			switch (event.key.keysym.scancode) {
 			case SDL_SCANCODE_W:
 				glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_FILL : GL_LINE);
 				wireframe = !wireframe;
+				printcfg = true;
 				break;
 			case SDL_SCANCODE_D:
 				depth_bit = !depth_bit;
-				if (depth_bit) {
+				if (depth_bit)
 					glEnable(GL_DEPTH_TEST);
-				} else {
+				else
 					glDisable(GL_DEPTH_TEST);
-				}
+				printcfg = true;
 				break;
 			}
 
-			printf("SDL2 OPENG INITIALIZED!\n"
-			       "W: set wireframe (%s)\n"
-			       "D: set depth bit (%s)\n",
-			       wireframe ? "true" : "false",
-			       depth_bit ? "true" : "false");
+			if (printcfg) {
+				printf("SDL2 OPENG INITIALIZED!\n"
+				       "W: set wireframe (%s)\n"
+				       "D: set depth bit (%s)\n",
+				       wireframe ? "true" : "false",
+				       depth_bit ? "true" : "false");
+			}
 		}
 	}
 	return true;
@@ -224,7 +230,7 @@ void sdl2_opengl_set_uniform(const GLchar* const name, const void* const data)
 	static GLint index;
 	
 	if (lastname_addr != name) {
-		index = glGetUniformLocation(sp_id, "trans");
+		index = glGetUniformLocation(sp_id, name);
 		lastname_addr = name;
 	}
 
