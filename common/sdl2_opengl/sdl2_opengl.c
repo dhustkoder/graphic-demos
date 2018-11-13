@@ -119,8 +119,8 @@ bool sdl2_opengl_init(const char* const winname,
 	glUseProgram(sp_id);
 
 	printf("SDL2 OPENG INITIALIZED!\n"
-	       "W: set wireframe\n"
-		   "D: set depth bit\n");
+	       "W: set wireframe (false)\n"
+	       "D: set depth bit (false)\n");
 
 	return true;
 }
@@ -169,7 +169,7 @@ bool sdl2_opengl_handle_events(void)
 		if (event.type == SDL_KEYDOWN) {
 			switch (event.key.keysym.scancode) {
 			case SDL_SCANCODE_W:
-				glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+				glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_FILL : GL_LINE);
 				wireframe = !wireframe;
 				break;
 			case SDL_SCANCODE_D:
@@ -179,7 +179,14 @@ bool sdl2_opengl_handle_events(void)
 				} else {
 					glDisable(GL_DEPTH_TEST);
 				}
+				break;
 			}
+
+			printf("SDL2 OPENG INITIALIZED!\n"
+			       "W: set wireframe (%s)\n"
+			       "D: set depth bit (%s)\n",
+			       wireframe ? "true" : "false",
+			       depth_bit ? "true" : "false");
 		}
 	}
 	return true;
