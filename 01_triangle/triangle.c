@@ -56,7 +56,7 @@ int main(void)
 		sdl2_opengl_begin_frame();
 		
 		glClearColor(0, 0, 0, 0xFF);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		/* Draw the triangle from GPU RAM to Screen
 		 * */
