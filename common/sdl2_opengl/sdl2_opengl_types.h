@@ -2,29 +2,25 @@
 #define SDL2_OPENGL_TYPES_H_
 #include <GL/glew.h>
 
-
-struct vec2f {
+struct vec2 {
 	GLfloat x, y;
 };
 
-
-struct vec3f {
+struct vec3 {
 	GLfloat x, y, z;
 };
 
-
-struct vec4f {
+struct vec4 {
 	GLfloat x, y, z, w;
 };
 
 
-struct mat3f {
-	struct vec3f data[3];
+struct mat3 {
+	struct vec3 data[3];
 };
 
-
-struct mat4f {
-	struct vec4f data[4];
+struct mat4 {
+	struct vec4 data[4];
 };
 
 

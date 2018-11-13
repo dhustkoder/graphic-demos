@@ -2,6 +2,7 @@
 #include <sdl2_opengl/sdl2_opengl.h>
 
 
+
 const GLchar* const vs_src =
 "#version 130\n"
 "in vec3 pos;\n"
@@ -62,9 +63,8 @@ int main(void)
 		 * transformation to all vertices/vectors of the object
 		 * this will rotate the triangle 1 degree per frame
 		 * */
-		for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i) {
+		for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i)
 			glm_vec_rotate_m4(rotation_matrix, verts[i].pos, verts[i].pos);
-		}
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STREAM_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(verts)/sizeof(verts[0]));
