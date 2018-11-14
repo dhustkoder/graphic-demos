@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <cglm/cglm.h>
 #include <sdl2_opengl.h>
 #define STB_IMAGE_IMPLEMENTATION
@@ -79,10 +80,10 @@ int main(void)
 	sdl2_opengl_vattrp("pos", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data), NULL);
 	
 	sdl2_opengl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
-	                   (void*)((struct vertex_data*)NULL)->rgb);
+	                   (void*)offsetof(struct vertex_data, rgb));
 
 	sdl2_opengl_vattrp("uv", 2, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
-	                   (void*)((struct vertex_data*)NULL)->uv);
+	                   (void*)offsetof(struct vertex_data, uv));
 
 
 	struct vertex_data verts[] = {

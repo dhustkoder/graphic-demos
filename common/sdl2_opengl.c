@@ -118,8 +118,10 @@ bool sdl2_opengl_init(const char* const winname,
 	glLinkProgram(sp_id);
 	glUseProgram(sp_id);
 
+
 	glEnable(GL_DEPTH_TEST);
 
+	
 	printf("SDL2 OPENG INITIALIZED!\n"
 	       "W: set wireframe\n"
 	       "D: set depth bit\n");

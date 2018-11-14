@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <cglm/cglm.h>
 #include <sdl2_opengl.h>
 
@@ -39,7 +40,7 @@ int main(void)
 
 	sdl2_opengl_vattrp("pos", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data), NULL);
 	sdl2_opengl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
-	                   (void*)((struct vertex_data*)NULL)->rgb);
+	                   (void*)offsetof(struct vertex_data, rgb));
 
 	struct vertex_data verts[] = {
 		{{-0.5, -0.5, 0}, {1, 0, 0}},
