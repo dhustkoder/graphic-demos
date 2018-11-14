@@ -53,10 +53,12 @@ static bool load_texture(void)
 	glGenTextures(1, &gl_tex_id);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gl_tex_id);
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -97,7 +99,7 @@ int main(void)
 		sdl2_opengl_begin_frame();
 		
 		glClearColor(0, 0, 0, 0xFF);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glDrawArrays(GL_QUADS, 0, sizeof(verts)/sizeof(verts[0]));
 
