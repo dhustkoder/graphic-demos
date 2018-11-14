@@ -118,9 +118,11 @@ bool sdl2_opengl_init(const char* const winname,
 	glLinkProgram(sp_id);
 	glUseProgram(sp_id);
 
+	glEnable(GL_DEPTH_TEST);
+
 	printf("SDL2 OPENG INITIALIZED!\n"
-	       "W: set wireframe (false)\n"
-	       "D: set depth bit (false)\n");
+	       "W: set wireframe\n"
+	       "D: set depth bit\n");
 
 	return true;
 }
@@ -160,7 +162,7 @@ bool sdl2_opengl_handle_events(void)
 {
 	static SDL_Event event;
 	static bool wireframe = false;
-	static bool depth_bit = false;
+	static bool depth_bit = true;
 
 
 	while (SDL_PollEvent(&event)) {

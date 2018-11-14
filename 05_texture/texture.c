@@ -68,7 +68,7 @@ static bool load_texture(void)
 
 int main(void)
 {
-	if (!sdl2_opengl_init("TRIANGLE", 800, 600, vs_src, fs_src))
+	if (!sdl2_opengl_init("TEXTURE", 800, 600, vs_src, fs_src))
 		return EXIT_FAILURE;
 
 	if (!load_texture())
