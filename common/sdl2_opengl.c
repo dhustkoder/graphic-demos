@@ -173,11 +173,13 @@ bool sdl2_opengl_handle_events(void)
 			bool printcfg = false;
 			
 			switch (event.key.keysym.scancode) {
+				
 			case SDL_SCANCODE_W:
 				glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_FILL : GL_LINE);
 				wireframe = !wireframe;
 				printcfg = true;
 				break;
+
 			case SDL_SCANCODE_D:
 				depth_bit = !depth_bit;
 				if (depth_bit)
@@ -185,6 +187,9 @@ bool sdl2_opengl_handle_events(void)
 				else
 					glDisable(GL_DEPTH_TEST);
 				printcfg = true;
+				break;
+
+			default:
 				break;
 			}
 
