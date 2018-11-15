@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <cglm/cglm.h>
-#include <sdl2_opengl.h>
+#include <sogl.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 

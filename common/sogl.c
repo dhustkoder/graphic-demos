@@ -3,7 +3,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
-#include "sdl2_opengl.h"
+#include "sogl.h"
 
 // graphics
 static SDL_Window* window = NULL;

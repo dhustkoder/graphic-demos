@@ -1,6 +1,6 @@
 #include <stddef.h>
-#include <sdl2_opengl.h>
-#include <sdl2_opengl_math.h>
+#include <sogl.h>
+#include <sogl_math.h>
 
 
 const GLchar* const vs_src =
@@ -47,23 +47,10 @@ int main(void)
 		{{ 0.0,  0.5, 0}, {0, 0, 1}},
 	};
 
-	/* Our rotation matrix is set to rotate 1 degree
+	/* Our rotation matrix is set to rotate 1 degree around Z axis
 	 * */
-
-
-	const GLfloat rad = 90 * (M_PI / 180.f);
-	const GLfloat c = cos(rad);
-	const GLfloat s = sin(rad);
-	printf("RAD: (%f)  C: (%f)  S: (%f)\n", rad, c, s);
-
-	for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i) {
-		GLfloat nx, ny;
-		nx = (c * verts[i].pos.x) - (s * verts[i].pos.y);
-		ny = (s * verts[i].pos.x) + (c * verts[i].pos.y);
-		verts[i].pos.x = nx;
-		verts[i].pos.y = ny;
-		printf("X: (%.3f)  Y: (%.3f)\n", verts[i].pos.x, verts[i].pos.y);
-	}
+	struct mat4 rot = SOGL_MAT4_IDENTITY;
+	sogl_mat4_rotate(sogl_radians(1), &(struct vec3){0, 0, 1}, &rot, &rot);
 
 	while (sogl_handle_events()) {
 		sogl_begin_frame();
@@ -75,8 +62,8 @@ int main(void)
 		 * transformation to all vertices/vectors of the object
 		 * this will rotate the triangle 1 degree per frame
 		 * */
-
-
+		for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i)
+			sogl_mul_mat4_vec3(&rot, &verts[i].pos, &verts[i].pos);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STREAM_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(verts)/sizeof(verts[0]));

@@ -1,12 +1,12 @@
 CC=gcc
 CFLAGS=-std=c11 -O3 -flto
-INCLUDE_DIRS=-I../common -I../external/cglm/include
-INCLUDE_LIBS=-L../external/cglm/.libs/
-LIBS= -lcglm -lSDL2 -lGLEW -lGL
+INCLUDE_DIRS=-I../common
+INCLUDE_LIBS=-L../common
+LIBS= -lsogl -lSDL2 -lGLEW -lGL
 
-piramid: piramid.c ../common/sdl2_opengl.c
+piramid.out: piramid.c
 	$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(INCLUDE_LIBS) $^ $(LIBS) -o $@
 
 
 clean:
-	rm -rf piramid
+	rm -rf *.out

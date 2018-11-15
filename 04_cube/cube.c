@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <cglm/cglm.h>
-#include <sdl2_opengl.h>
+#include <sogl.h>
 
 
 const GLchar* const vs_src =

@@ -1,5 +1,5 @@
-#ifndef SDL2_OPENGL_H_
-#define SDL2_OPENGL_H_
+#ifndef SOGL_H_
+#define SOGL_H_
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>

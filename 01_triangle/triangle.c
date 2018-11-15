@@ -1,6 +1,6 @@
 #include <stddef.h>
-#include <cglm/cglm.h>
-#include <sdl2_opengl.h>
+#include <sogl.h>
+#include <sogl_math.h>
 
 
 const GLchar* const vs_src =
@@ -26,8 +26,8 @@ const GLchar* const fs_src =
 
 
 struct vertex_data {
-	vec3 pos;
-	vec3 rgb;
+	struct vec3 pos;
+	struct vec3 rgb;
 };
 
 

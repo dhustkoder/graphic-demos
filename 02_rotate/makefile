@@ -1,12 +1,12 @@
 CC=gcc
 CFLAGS=-std=c11 -O3 -flto
 INCLUDE_DIRS=-I../common
-INCLUDE_LIBS=
-LIBS=-lm -lSDL2 -lGLEW -lGL
+INCLUDE_LIBS=-L../common
+LIBS=-lm -lsogl -lSDL2 -lGLEW -lGL
 
-rotate: rotate.c ../common/sdl2_opengl.c
+rotate.out: rotate.c
 	$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(INCLUDE_LIBS) $^ $(LIBS) -o $@
 
 
 clean:
-	rm -rf rotate
+	rm -rf *.out
