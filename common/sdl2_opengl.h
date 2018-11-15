@@ -7,26 +7,26 @@
 #define MAX_VBO_BYTES (1024l * 1024l * 8l) // 8MB VRAM
 
 
-extern bool sdl2_opengl_init(const char* winname,
-                             int width, int height,
-		             const GLchar* vs_src,
-		             const GLchar* fs_src);
+extern bool sogl_init(const char* winname,
+                      int width, int height,
+                      const GLchar* vs_src,
+                      const GLchar* fs_src);
 
-extern void sdl2_opengl_term(void);
+extern void sogl_term(void);
 
-extern bool sdl2_opengl_handle_events(void);
+extern bool sogl_handle_events(void);
 
 
-extern void sdl2_opengl_begin_frame(void);
-extern Uint32 sdl2_opengl_end_frame(void);
+extern void sogl_begin_frame(void);
+extern Uint32 sogl_end_frame(void);
 
-extern void sdl2_opengl_vattrp(const GLchar* attrib_name,
-                               GLint size,
-                               GLenum type,
-                               GLboolean normalized,
-                               GLsizei stride,
-                               const GLvoid* pointer);
+extern void sogl_vattrp(const GLchar* attrib_name,
+                        GLint size,
+                        GLenum type,
+                        GLboolean normalized,
+                        GLsizei stride,
+                        const GLvoid* pointer);
 
-extern void sdl2_opengl_set_uniform(const GLchar* name, const void* data);
+extern void sogl_set_uniform(const GLchar* name, const void* data);
 
 #endif

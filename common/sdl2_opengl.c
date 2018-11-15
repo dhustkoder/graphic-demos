@@ -17,7 +17,7 @@ static Uint32 frame_clk;
 
 
 
-bool sdl2_opengl_init(const char* const winname,
+bool sogl_init(const char* const winname,
                       const int width, const int height,
                       const GLchar* const vs_src,
                       const GLchar* const fs_src)
@@ -35,27 +35,27 @@ bool sdl2_opengl_init(const char* const winname,
 	                          SDL_WINDOW_OPENGL);
 	if (window == NULL) {
 		fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
-		sdl2_opengl_term();
+		sogl_term();
 		return false;
 	}
 
 	if (SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1) < 0) {
 		fprintf(stderr, "Couldn't set GL DOUBLE BUFFER\n");
-		sdl2_opengl_term();
+		sogl_term();
 		return false;
 	}
 
 	glcontext = SDL_GL_CreateContext(window);
 	if (glcontext == NULL) {
 		fprintf(stderr, "Couldn't create GL Context: %s\n", SDL_GetError());
-		sdl2_opengl_term();
+		sogl_term();
 		return false;
 	}
 
 	GLenum err;
 	if ((err = glewInit()) != GLEW_OK) {
 		fprintf(stderr, "GLEW Error: %s\n", glewGetErrorString(err));
-		sdl2_opengl_term();
+		sogl_term();
 		return false;
 	}
 
@@ -69,21 +69,21 @@ bool sdl2_opengl_init(const char* const winname,
 	sp_id = glCreateProgram();
 	if (sp_id == 0) {
 		fprintf(stderr, "Couldn't create GL Program\n");
-		sdl2_opengl_term();
+		sogl_term();
 		return false;
 	}
 
 	vs_id = glCreateShader(GL_VERTEX_SHADER);
 	if (vs_id == 0) {
 		fprintf(stderr, "Couldn't create Vertex Shader\n");
-		sdl2_opengl_term();
+		sogl_term();
 		return false;
 	}
 
 	fs_id = glCreateShader(GL_FRAGMENT_SHADER);
 	if (fs_id == 0) {
 		fprintf(stderr, "Couldn't create Fragment Shader\n");
-		sdl2_opengl_term();
+		sogl_term();
 		return false;
 	}
 
@@ -96,7 +96,7 @@ bool sdl2_opengl_init(const char* const winname,
 	glGetShaderiv(vs_id, GL_COMPILE_STATUS, &shader_success);
 	if (shader_success == GL_FALSE) {
 		fprintf(stderr, "Couldn't compile Vertex Shader\n");
-		sdl2_opengl_term();
+		sogl_term();
 		return false;
 	}
 
@@ -108,7 +108,7 @@ bool sdl2_opengl_init(const char* const winname,
 	glGetShaderiv(fs_id, GL_COMPILE_STATUS, &shader_success);
 	if (shader_success == GL_FALSE) {
 		fprintf(stderr, "Couldn't compile Fragment Shader\n");
-		sdl2_opengl_term();
+		sogl_term();
 		return false;
 	}
 
@@ -129,7 +129,7 @@ bool sdl2_opengl_init(const char* const winname,
 	return true;
 }
 
-void sdl2_opengl_term(void)
+void sogl_term(void)
 {
 	if (fs_id != 0) {
 		glDetachShader(sp_id, fs_id);
@@ -160,7 +160,7 @@ void sdl2_opengl_term(void)
 }
 
 
-bool sdl2_opengl_handle_events(void)
+bool sogl_handle_events(void)
 {
 	static SDL_Event event;
 	static bool wireframe = false;
@@ -207,12 +207,12 @@ bool sdl2_opengl_handle_events(void)
 	return true;
 }
 
-void sdl2_opengl_begin_frame(void)
+void sogl_begin_frame(void)
 {
 	frame_clk = SDL_GetTicks();
 }
 
-Uint32 sdl2_opengl_end_frame(void)
+Uint32 sogl_end_frame(void)
 {
 	frame_clk = SDL_GetTicks() - frame_clk;
 	SDL_GL_SwapWindow(window);
@@ -220,7 +220,7 @@ Uint32 sdl2_opengl_end_frame(void)
 }
 
 
-void sdl2_opengl_vattrp(const GLchar* const attrib_name,
+void sogl_vattrp(const GLchar* const attrib_name,
                         const GLint size,
                         const GLenum type,
                         const GLboolean normalized,
@@ -233,7 +233,7 @@ void sdl2_opengl_vattrp(const GLchar* const attrib_name,
 }
 
 
-void sdl2_opengl_set_uniform(const GLchar* const name, const void* const data)
+void sogl_set_uniform(const GLchar* const name, const void* const data)
 {
 	static const GLchar* lastname_addr;
 	static GLint index;

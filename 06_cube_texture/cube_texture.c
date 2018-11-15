@@ -69,18 +69,18 @@ static bool load_texture(void)
 
 int main(void)
 {
-	if (!sdl2_opengl_init("CUBE TEXTURE", 800, 600, vs_src, fs_src))
+	if (!sogl_init("CUBE TEXTURE", 1280, 720, vs_src, fs_src))
 		return EXIT_FAILURE;
 
 	if (!load_texture())
 		goto Lload_texture_failed;
 
-	sdl2_opengl_vattrp("pos", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data), NULL);
+	sogl_vattrp("pos", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data), NULL);
 	
-	sdl2_opengl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
+	sogl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
 	                   (void*)offsetof(struct vertex_data, rgb));
 
-	sdl2_opengl_vattrp("uv", 2, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
+	sogl_vattrp("uv", 2, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
 	                   (void*)offsetof(struct vertex_data, uv));
 
 
@@ -128,8 +128,8 @@ int main(void)
 	glm_rotate(rotation_matrix, glm_rad(1), (vec3){0.35, 1, 0});
 
 
-	while (sdl2_opengl_handle_events()) {
-		sdl2_opengl_begin_frame();
+	while (sogl_handle_events()) {
+		sogl_begin_frame();
 		
 		glClearColor(0, 0, 0, 0xFF);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -143,9 +143,9 @@ int main(void)
 		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STREAM_DRAW);
 		glDrawArrays(GL_QUADS, 0, sizeof(verts)/sizeof(verts[0]));
 
-		sdl2_opengl_end_frame();
+		sogl_end_frame();
 	}
 Lload_texture_failed:
-	sdl2_opengl_term();
+	sogl_term();
 	return 0;
 }

@@ -33,12 +33,12 @@ struct vertex_data {
 
 int main(void)
 {
-	if (!sdl2_opengl_init("TRIANGLE", 800, 600, vs_src, fs_src)) {
+	if (!sogl_init("TRIANGLE", 800, 600, vs_src, fs_src)) {
 		return EXIT_FAILURE;
 	}
 
-	sdl2_opengl_vattrp("pos", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data), NULL);
-	sdl2_opengl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
+	sogl_vattrp("pos", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data), NULL);
+	sogl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
 	                   (void*)offsetof(struct vertex_data, rgb));
 
 	/* define the vertices of our triangle (3 points)
@@ -53,8 +53,8 @@ int main(void)
 	 * */
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
 
-	while (sdl2_opengl_handle_events()) {
-		sdl2_opengl_begin_frame();
+	while (sogl_handle_events()) {
+		sogl_begin_frame();
 		
 		glClearColor(0, 0, 0, 0xFF);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -63,9 +63,9 @@ int main(void)
 		 * */
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(verts)/sizeof(verts[0]));
 
-		sdl2_opengl_end_frame();
+		sogl_end_frame();
 	}
 
-	sdl2_opengl_term();
+	sogl_term();
 	return 0;
 }

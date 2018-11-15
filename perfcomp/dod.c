@@ -146,13 +146,13 @@ int main(int argc, char** argv)
 	"}\n";
 
 
-	if (!sdl2_opengl_init("DOD", WIN_WIDTH, WIN_HEIGHT, vs_src, fs_src))
+	if (!sogl_init("DOD", WIN_WIDTH, WIN_HEIGHT, vs_src, fs_src))
 		return EXIT_FAILURE;
 
 
-	sdl2_opengl_vattrp("pos", 2, GL_FLOAT, GL_TRUE,
+	sogl_vattrp("pos", 2, GL_FLOAT, GL_TRUE,
 	                   sizeof(struct vertex), NULL);
-	sdl2_opengl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE,
+	sogl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE,
 	                   sizeof(struct vertex),
 	                   (void*)(sizeof(GLfloat) * 2));
 
@@ -160,8 +160,8 @@ int main(int argc, char** argv)
 	SDL_GL_SetSwapInterval(0);
 	init_random_engine();
 
-	while (sdl2_opengl_handle_events()) {
-		sdl2_opengl_begin_frame();
+	while (sogl_handle_events()) {
+		sogl_begin_frame();
 		
 		glClearColor(0x00, 0x00, 0x00, 0xFF);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -211,7 +211,7 @@ int main(int argc, char** argv)
 			glDrawArrays(GL_QUADS, 0, remaining * 4);
 		}
 
-		const Uint32 frame_time = sdl2_opengl_end_frame();
+		const Uint32 frame_time = sogl_end_frame();
 
 		if (frame_time < 16) {
 			for (int i = 0; i < 50; ++i)
@@ -221,7 +221,7 @@ int main(int argc, char** argv)
 		printf("RECTS: %lld\n", nrects);
 	}
 
-	sdl2_opengl_term();
+	sogl_term();
 	return EXIT_SUCCESS;
 }
 

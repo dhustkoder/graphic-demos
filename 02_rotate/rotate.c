@@ -1,7 +1,6 @@
 #include <stddef.h>
-#include <cglm/cglm.h>
 #include <sdl2_opengl.h>
-
+#include <sdl2_opengl_math.h>
 
 
 const GLchar* const vs_src =
@@ -27,20 +26,20 @@ const GLchar* const fs_src =
 
 
 struct vertex_data {
-	vec3 pos;
-	vec3 rgb;
+	struct vec3 pos;
+	struct vec3 rgb;
 };
 
 
 int main(void)
 {
-	if (!sdl2_opengl_init("ROTATE", 800, 600, vs_src, fs_src)) {
+	if (!sogl_init("ROTATE", 800, 600, vs_src, fs_src)) {
 		return EXIT_FAILURE;
 	}
 
-	sdl2_opengl_vattrp("pos", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data), NULL);
-	sdl2_opengl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
-	                   (void*)offsetof(struct vertex_data, rgb));
+	sogl_vattrp("pos", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data), NULL);
+	sogl_vattrp("rgb", 3, GL_FLOAT, GL_TRUE, sizeof(struct vertex_data),
+	            (void*)offsetof(struct vertex_data, rgb));
 
 	struct vertex_data verts[] = {
 		{{-0.5, -0.5, 0}, {1, 0, 0}},
@@ -50,12 +49,24 @@ int main(void)
 
 	/* Our rotation matrix is set to rotate 1 degree
 	 * */
-	mat4 rotation_matrix = GLM_MAT4_IDENTITY_INIT;
-	glm_rotate_z(rotation_matrix, glm_rad(1), rotation_matrix);
 
 
-	while (sdl2_opengl_handle_events()) {
-		sdl2_opengl_begin_frame();
+	const GLfloat rad = 90 * (M_PI / 180.f);
+	const GLfloat c = cos(rad);
+	const GLfloat s = sin(rad);
+	printf("RAD: (%f)  C: (%f)  S: (%f)\n", rad, c, s);
+
+	for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i) {
+		GLfloat nx, ny;
+		nx = (c * verts[i].pos.x) - (s * verts[i].pos.y);
+		ny = (s * verts[i].pos.x) + (c * verts[i].pos.y);
+		verts[i].pos.x = nx;
+		verts[i].pos.y = ny;
+		printf("X: (%.3f)  Y: (%.3f)\n", verts[i].pos.x, verts[i].pos.y);
+	}
+
+	while (sogl_handle_events()) {
+		sogl_begin_frame();
 		
 		glClearColor(0, 0, 0, 0xFF);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -64,15 +75,15 @@ int main(void)
 		 * transformation to all vertices/vectors of the object
 		 * this will rotate the triangle 1 degree per frame
 		 * */
-		for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i)
-			glm_vec_rotate_m4(rotation_matrix, verts[i].pos, verts[i].pos);
+
+
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STREAM_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(verts)/sizeof(verts[0]));
 
-		sdl2_opengl_end_frame();
+		sogl_end_frame();
 	}
 
-	sdl2_opengl_term();
+	sogl_term();
 	return 0;
 }
