@@ -76,7 +76,7 @@ int main(void)
 	/* Our rotation matrix is set to rotate 1 degree
 	 * */
 	struct mat4 rotation_matrix = SOGL_MAT4_IDENTITY;
-	sogl_mat4_rotate(sogl_radians(-1),
+	sogl_mat4_rotate(sogl_radians(1),
 	                 &(struct vec3){0.1, 1, 0.1},
 	                 &rotation_matrix, &rotation_matrix);
 
@@ -92,7 +92,7 @@ int main(void)
 		 * */
 		for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i)
 			sogl_mul_mat4_vec3(&rotation_matrix, &verts[i].pos, &verts[i].pos);
-
+		
 		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STREAM_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(verts)/sizeof(verts[0]));
 
