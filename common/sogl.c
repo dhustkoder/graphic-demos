@@ -18,9 +18,9 @@ static Uint32 frame_clk;
 
 
 bool sogl_init(const char* const winname,
-                      const int width, const int height,
-                      const GLchar* const vs_src,
-                      const GLchar* const fs_src)
+               const int width, const int height,
+               const GLchar* const vs_src,
+               const GLchar* const fs_src)
 {
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
@@ -221,11 +221,11 @@ Uint32 sogl_end_frame(void)
 
 
 void sogl_vattrp(const GLchar* const attrib_name,
-                        const GLint size,
-                        const GLenum type,
-                        const GLboolean normalized,
-                        const GLsizei stride,
-                        const GLvoid* const pointer)
+                 const GLint size,
+                 const GLenum type,
+                 const GLboolean normalized,
+                 const GLsizei stride,
+                 const GLvoid* const pointer)
 {
 	const GLuint index = glGetAttribLocation(sp_id, attrib_name);
 	glEnableVertexAttribArray(index);
