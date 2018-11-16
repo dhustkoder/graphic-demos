@@ -1,12 +1,12 @@
 CC=gcc
 CFLAGS=-std=c11 -O3 -flto
 INCLUDE_DIRS=-I../common -I../external/cglm/include
-INCLUDE_LIBS=-L../external/cglm/.libs/
-LIBS= -lcglm -lSDL2 -lGLEW -lGL
+INCLUDE_LIBS=-L../common -L../external/cglm/.libs/
+LIBS= -lsogl -lcglm -lSDL2 -lGLEW -lGL
 
-cube: cube.c ../common/sdl2_opengl.c
+cube.out: cube.c
 	$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(INCLUDE_LIBS) $^ $(LIBS) -o $@
 
 
 clean:
-	rm -rf cube
+	rm -rf *.out
