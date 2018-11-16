@@ -11,3 +11,4 @@ asm/
 *.dll
 *.lib
 *.obj
+*.a
