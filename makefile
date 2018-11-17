@@ -6,6 +6,5 @@ all: $(SUBDIRS)
 clean: $(SUBDIRS)
 	$(foreach d, $^, $(MAKE) -C $(d) clean;)
 
-
 .PHONY: $(SUBDIRS) clean
 
