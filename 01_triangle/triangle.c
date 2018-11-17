@@ -48,7 +48,7 @@ int main(void)
 		{{ 0.5, -0.5, 0}, {0, 1, 0}}, // down right point
 		{{ 0.0,  0.5, 0}, {0, 0, 1}}, // up         point
 	};
-
+	
 	/* send to GPU RAM
 	 * */
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
