@@ -122,7 +122,7 @@ bool sogl_init(const char* const winname,
 	glEnable(GL_DEPTH_TEST);
 
 	
-	printf("SDL2 OPENG INITIALIZED!\n"
+	printf("SDL2 OPENGL INITIALIZED!\n"
 	       "W: set wireframe\n"
 	       "D: set depth bit\n");
 

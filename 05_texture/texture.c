@@ -40,10 +40,10 @@ struct vertex_data {
 
 static bool load_texture(void)
 {
-	int tex_width, tex_height, tex_channels;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char* const tex_data = stbi_load("tex.png", &tex_width, &tex_height, &tex_channels, 0);
 
+	int tex_width, tex_height, tex_channels;
+	unsigned char* const tex_data = stbi_load("tex.png", &tex_width, &tex_height, &tex_channels, 0);
 	if (tex_data == NULL) {
 		fprintf(stderr, "Couldn't load texture image\n");
 		return false;

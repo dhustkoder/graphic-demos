@@ -145,6 +145,7 @@ int main(void)
 
 		sogl_end_frame();
 	}
+
 Lload_texture_failed:
 	sogl_term();
 	return 0;

@@ -1,6 +1,6 @@
 #include <stddef.h>
-#include <cglm/cglm.h>
 #include <sogl.h>
+#include <sogl_math.h>
 
 
 const GLchar* const vs_src =
@@ -26,8 +26,8 @@ const GLchar* const fs_src =
 
 
 struct vertex_data {
-	vec3 pos;
-	vec3 rgb;
+	struct vec3 pos;
+	struct vec3 rgb;
 };
 
 
@@ -82,8 +82,8 @@ int main(void)
 
 	/* Our rotation matrix is set to rotate 1 degree
 	 * */
-	mat4 rotation_matrix = GLM_MAT4_IDENTITY_INIT;
-	glm_rotate(rotation_matrix, glm_rad(-1), (vec3){0.4, 1, 0});
+	struct mat4 rotation_matrix = SOGL_MAT4_IDENTITY;
+	sogl_mat4_rotate(sogl_radians(1), &(struct vec3){0.4, 0.8, 0}, &rotation_matrix, &rotation_matrix);
 
 
 	while (sogl_handle_events()) {
@@ -97,7 +97,7 @@ int main(void)
 		 * this will rotate the triangle 1 degree per frame
 		 * */
 		for (int i = 0; i < (sizeof(verts)/sizeof(verts[0])); ++i)
-			glm_vec_rotate_m4(rotation_matrix, verts[i].pos, verts[i].pos);
+			sogl_mul_mat4_vec3(&rotation_matrix, &verts[i].pos, &verts[i].pos);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STREAM_DRAW);
 		glDrawArrays(GL_QUADS, 0, sizeof(verts)/sizeof(verts[0]));
